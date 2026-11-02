@@ -1,0 +1,234 @@
+/* ============================================================
+   SUMI THEME — layouts(レイアウトクラス。全て padding: 0 系)
+   意匠の出自: webpaper のマストヘッド / chapter-break / agenda /
+   pull-quote(DESIGN.md §3)。座標は 1280×720 基準。
+   ============================================================ */
+
+/* ---- 共通: レイアウトクラスは全面キャンバス(padding 0)。
+   print view でも reveal.css の padding 0 !important と一致させて維持 ---- */
+.reveal .slides section.sumi-cover,
+.reveal .slides section.sumi-section,
+.reveal .slides section.sumi-quote,
+.reveal .slides section.sumi-closing {
+  padding: 0;
+}
+html.reveal-print .reveal .slides section.sumi-cover,
+html.reveal-print .reveal .slides section.sumi-section,
+html.reveal-print .reveal .slides section.sumi-quote,
+html.reveal-print .reveal .slides section.sumi-closing {
+  padding: 0 !important;
+}
+
+/* ============================================================
+   カバー: 墨のマストヘッドを全面化(署名的な型)。
+   上端に群青ボーダー、その下左に深紅の垂れタブ。
+   ダークでは --cover-* トークンにより白抜き反転(明帯+墨文字)。
+   ============================================================ */
+section.sumi-cover {
+  background: var(--cover-bg);
+  color: var(--cover-ink);
+}
+section.sumi-cover::before {       /* 群青トップボーダー */
+  content: "";
+  position: absolute;
+  left: 0; top: 0;
+  width: 100%; height: 10px;
+  background: var(--accent);
+}
+section.sumi-cover::after {        /* 深紅の垂れタブ */
+  content: "";
+  position: absolute;
+  left: 64px; top: 10px;
+  width: 84px; height: 28px;
+  background: var(--crimson);
+}
+section.sumi-cover .cover-block {
+  position: absolute;
+  left: 64px; right: 64px; top: 208px;
+}
+section.sumi-cover .kicker { color: var(--cover-muted); margin-bottom: 22px; }
+section.sumi-cover h1 {
+  font-size: 64px;
+  font-weight: 700;
+  line-height: 1.35;
+  color: var(--cover-ink);
+  margin: 0 0 26px;
+}
+section.sumi-cover .cover-meta {
+  font-size: 20px;
+  color: var(--cover-muted);
+  border-top: 1px solid var(--cover-rule);
+  padding-top: 18px;
+}
+section.sumi-cover .cover-meta span + span::before { content: "・"; margin: 0 0.6em; }
+section.sumi-cover .speaker {
+  position: absolute;
+  left: 64px; bottom: 110px;
+  font-size: 26px;
+  font-weight: 700;
+  color: var(--cover-ink);
+}
+section.sumi-cover .speaker-role {
+  position: absolute;
+  left: 64px; bottom: 72px;
+  font-size: 19px;
+  color: var(--cover-muted);
+}
+
+/* ============================================================
+   章扉: chapter-break の意匠(グレー罫+ドット+欧文キッカー)
+   +等幅の章番号(群青)。生成り地。
+   ============================================================ */
+section.sumi-section .section-inner {
+  position: absolute;
+  left: 96px; right: 96px; top: 236px;
+}
+section.sumi-section .chapter-rule {
+  position: relative;
+  height: 1px;
+  background: var(--line);
+  /* 右は章番号(.chapter-no)の手前で止める — 罫が数字を貫通させない */
+  margin: 0 200px 40px 0;
+}
+section.sumi-section .chapter-rule::before {   /* 罫上のドット */
+  content: "";
+  position: absolute;
+  left: 0; top: -4px;
+  width: 9px; height: 9px;
+  border-radius: 50%;
+  background: var(--ink);
+}
+section.sumi-section .chapter-no {
+  position: absolute;
+  right: 96px; top: 150px;
+  font-family: var(--f-mono);
+  font-variant-numeric: tabular-nums;
+  font-size: 120px;
+  font-weight: 700;
+  line-height: 1;
+  color: var(--accent);
+  opacity: 0.85;
+}
+section.sumi-section h2 {
+  border-left: none;
+  padding-left: 0;
+  margin: 0;
+  font-size: 54px;
+  line-height: 1.35;
+}
+section.sumi-section .kicker { margin-bottom: 18px; color: var(--gray-caption); }
+
+/* ============================================================
+   アジェンダ: webpaper .agenda の昇格版(特大黒丸+two-tier)。
+   3〜5 項目・1 行ラベルまで。再訪時は .is-current で現在地を群青に。
+   ============================================================ */
+section.sumi-agenda ul.agenda {
+  list-style: none;
+  margin: 26px 0 0;
+  padding: 0;
+  max-width: 980px;
+}
+section.sumi-agenda ul.agenda > li {
+  display: grid;
+  grid-template-columns: 44px 1fr;
+  column-gap: 18px;
+  align-items: baseline;
+  margin: 0 0 38px;
+}
+section.sumi-agenda ul.agenda > li::before {
+  content: "";
+  width: 22px; height: 22px;
+  border-radius: 50%;
+  background: var(--ink);
+  align-self: center;
+  justify-self: start;
+}
+section.sumi-agenda .agenda-title {
+  display: block;
+  font-size: 32px;
+  font-weight: 700;
+  line-height: 1.35;
+}
+section.sumi-agenda .agenda-desc {
+  display: block;
+  grid-column: 2;
+  font-size: 20px;
+  color: var(--gray-caption);
+  margin-top: 4px;
+}
+section.sumi-agenda ul.agenda > li.is-current::before { background: var(--accent); }
+section.sumi-agenda ul.agenda > li.is-current .agenda-title { color: var(--accent); }
+section.sumi-agenda ul.agenda > li.is-done .agenda-title,
+section.sumi-agenda ul.agenda > li.is-done .agenda-desc { color: var(--gray-faint); }
+
+/* ============================================================
+   引用: pull-quote の拡大版。原文はセリフ、和訳はゴシック、
+   出典は等幅グレー。キークレームだけ強調色可。
+   ============================================================ */
+section.sumi-quote .quote-frame {
+  position: absolute;
+  left: 128px; right: 128px; top: 150px;
+}
+section.sumi-quote .quote-mark {
+  font-family: var(--f-serif);
+  font-size: 110px;
+  line-height: 1;
+  color: var(--gray-caption);
+  margin: 0 0 -6px -8px;
+}
+section.sumi-quote blockquote {
+  margin: 0;
+  font-family: var(--f-serif);
+  font-size: 34px;
+  line-height: 1.7;
+  color: var(--ink);
+}
+section.sumi-quote .quote-translation {
+  font-size: 24px;
+  line-height: 1.7;
+  color: var(--ink-mid);
+  border-top: 1px solid var(--line);
+  margin-top: 26px;
+  padding-top: 22px;
+}
+section.sumi-quote .quote-source {
+  font-family: var(--f-mono);
+  font-size: 18px;
+  color: var(--gray-caption);
+  margin-top: 18px;
+}
+
+/* ============================================================
+   クロージング: 大字 1 文+カバー意匠の縮小再演(群青罫+深紅タブ)。
+   生成り地(カバーと違い墨帯にしない — 終わりは紙に還る)。
+   ============================================================ */
+section.sumi-closing::before {
+  content: "";
+  position: absolute;
+  left: 0; top: 0;
+  width: 100%; height: 6px;
+  background: var(--accent);
+}
+section.sumi-closing::after {
+  content: "";
+  position: absolute;
+  left: 64px; top: 6px;
+  width: 64px; height: 20px;
+  background: var(--crimson);
+}
+section.sumi-closing .closing-statement {
+  position: absolute;
+  left: 96px; right: 96px; top: 290px;
+  font-size: 54px;
+  font-weight: 700;
+  line-height: 1.5;
+  text-align: center;
+  color: var(--ink);
+}
+section.sumi-closing .closing-sub {
+  position: absolute;
+  left: 96px; right: 96px; top: 430px;
+  font-size: 24px;
+  text-align: center;
+  color: var(--gray-caption);
+}

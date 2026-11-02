@@ -1,0 +1,272 @@
+/* ============================================================================
+   webdeck — editor のリボンと編集中の見た目(editor.js と対)。
+   書式そのもの(.pp-c1〜 / .pp-hl)は配布物でも描画されるよう shell.css 側にある。
+   ============================================================================ */
+
+/* 上にリボン、左に一覧(幅 --pp-ed-side-w)、下にノート(高さ --pp-ed-notes-h)。残りの灰色の作業域の中にスライドを出す */
+html.pp-editing { --pp-ed-gap: 18px; --pp-ed-bottom: 28px; }
+html.pp-editing:not(.reveal-print) .reveal-viewport:not(.reveal-scroll) { background-color: #f0f0f0; }
+html.pp-editing .reveal:not(.pp-th) {
+  position: fixed !important;
+  top: calc(var(--pp-ed-top, 120px) + var(--pp-ed-gap)); left: calc(var(--pp-ed-side-w, 236px) + var(--pp-ed-gap));
+  right: var(--pp-ed-gap); bottom: calc(var(--pp-ed-notes-h, 0px) + var(--pp-ed-bottom) + var(--pp-ed-gap));
+  height: auto !important; width: auto !important;
+}
+/* .reveal の中の --pp-canvas-*(背景レイヤー・ページ番号の位置)は、editor.js が .reveal 基準に直して渡す */
+html.pp-editing:not(.reveal-print) .reveal-viewport:not(.reveal-scroll) .reveal:not(.overview):not(.pp-th) > .backgrounds {
+  box-shadow: 0 1px 6px rgba(0, 0, 0, .25) !important;
+}
+/* 編集中は段階表示を全部出す(隠れた要素も直せるように) */
+html.pp-editing .reveal .slides section .fragment {
+  opacity: 1 !important; visibility: visible !important; transform: none !important;
+}
+html.pp-editing [data-pp-ed] { outline: 1px dashed transparent; outline-offset: 2px; cursor: text; border-radius: 2px; }
+html.pp-editing [data-pp-ed]:hover { outline-color: rgba(120, 170, 255, 0.55); }
+html.pp-editing [data-pp-ed]:focus { outline: 2px solid rgba(120, 170, 255, 0.9); }
+html.pp-editing .pp-ed-bar.pp-painting ~ * [data-pp-ed],
+html.pp-editing.pp-painting [data-pp-ed] { cursor: copy; }
+html.pp-editing .pp-dock { display: none !important; }
+
+/* ---- 上：タイトルの行・タブ・1 行のリボン(PowerPoint for the web と同じ組み方) ---- */
+.pp-ed-bar {
+  position: fixed; top: 0; left: 0; right: 0; z-index: 1000; box-sizing: border-box;
+  background: #f5f5f5; color: #242424; font: 13px/1.2 system-ui, -apple-system, "Segoe UI", "Hiragino Sans", "Noto Sans JP", sans-serif;
+}
+.pp-ed-titlebar { height: 40px; display: flex; align-items: center; gap: 8px; padding: 0 14px; }
+.pp-ed-app svg { width: 22px; height: 22px; display: block; }
+.pp-ed-bar button {
+  flex: none; display: inline-flex; align-items: center; justify-content: center; gap: 3px;
+  min-width: 30px; height: 30px; padding: 0 5px; border: 1px solid transparent; border-radius: 4px; box-sizing: border-box;
+  background: transparent; color: #242424; font: inherit; cursor: pointer; white-space: nowrap;
+}
+.pp-ed-bar button svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; flex: none; }
+.pp-ed-bar button svg.pp-ed-caret { width: 8px; height: 6px; stroke-width: 1.4; margin-left: 1px; opacity: .75; }
+.pp-ed-bar button:hover { background: #ebebeb; }
+.pp-ed-bar button:active { background: #e0e0e0; }
+.pp-ed-bar button .pp-t { font-size: 13px; }
+.pp-ed-bar button.pp-ed-title { height: 28px; max-width: min(46vw, 560px); padding: 0 6px; font-size: 14px; display: block; overflow: hidden; text-overflow: ellipsis; text-align: left; }
+.pp-ed-dirty { font-size: 12px; color: #616161; white-space: nowrap; }
+.pp-ed-dirty.pp-on { color: #b45309; font-weight: 700; }
+.pp-ed-bar button.pp-ed-savebtn { height: 26px; padding: 0 9px; border-color: #d1d1d1; background: #fff; color: #0f6cbd; }
+.pp-ed-bar button.pp-ed-savebtn .pp-t { font-size: 12px; font-weight: 600; }
+/* タブの行 */
+.pp-ed-tabs { height: 34px; display: flex; align-items: stretch; gap: 2px; padding: 0 10px; }
+.pp-ed-tab { border: 0 !important; background: transparent !important; height: 34px !important; padding: 0 12px !important; font-size: 14px !important; color: #424242 !important; position: relative; border-radius: 0 !important; }
+.pp-ed-tab:hover { color: #242424 !important; }
+.pp-ed-tab.pp-on { color: #242424 !important; font-weight: 700; }
+.pp-ed-tab.pp-on::after { content: ""; position: absolute; left: 12px; right: 12px; bottom: 3px; height: 3px; border-radius: 2px; background: #c43e1c; }
+.pp-ed-tabs-r { margin-left: auto; display: flex; align-items: center; gap: 6px; }
+.pp-ed-bar button.pp-ed-show, .pp-ed-bar button.pp-ed-exit { height: 28px; padding: 0 10px; border-color: #d1d1d1; background: #fff; }
+.pp-ed-bar button.pp-ed-show { background: #c43e1c; border-color: #c43e1c; color: #fff; }
+.pp-ed-bar button.pp-ed-show:hover { background: #a33216; }
+.pp-ed-bar button.pp-ed-show svg { width: 13px; height: 13px; }
+/* 1 行のリボン：白い角丸の帯にグループを並べ、区切り線で分ける */
+.pp-ed-ribbon { padding: 4px 10px 8px; }
+.pp-ed-panel {
+  display: flex; align-items: center; gap: 0; height: 40px; padding: 0 6px; overflow: hidden;
+  background: #fff; border-radius: 8px; box-shadow: 0 0 2px rgba(0,0,0,.12), 0 1px 3px rgba(0,0,0,.1);
+}
+.pp-ed-grp { flex: none; display: flex; align-items: center; gap: 1px; padding: 0 6px; position: relative; }
+.pp-ed-grp + .pp-ed-grp::before { content: ""; position: absolute; left: 0; top: 7px; bottom: 7px; width: 1px; background: #e0e0e0; }
+.pp-ed-grp[hidden] { display: none; }
+.pp-ed-bar button.pp-lab { padding: 0 8px; }
+.pp-ed-more { margin-left: auto; }
+.pp-ed-more[hidden] { display: none !important; }
+.pp-ed-bar button .pp-g { font: 15px/1 Georgia, "Times New Roman", serif; }
+.pp-ed-bar button b.pp-g { font-weight: 700; } .pp-ed-bar button i.pp-g { font-style: italic; }
+.pp-ed-bar button .pp-g sup, .pp-ed-bar button .pp-g sub { font-size: 9px; line-height: 0; position: relative; vertical-align: baseline; }
+.pp-ed-bar button .pp-g sup { top: -0.65em; } .pp-ed-bar button .pp-g sub { top: 0.3em; }
+.pp-ed-bar button .pp-ed-ga { display: inline-flex; flex-direction: column; align-items: center; line-height: 1; }
+.pp-ed-bar-c { display: block; width: 14px; height: 3px; margin-top: 1px; background: var(--pp-ed-c1, var(--pp-accent, #e67e22)); }
+.pp-ed-bar.pp-painting button[data-k=painter] { background: #fde68a; border-color: #f59e0b; }
+@media (max-width: 1100px) { .pp-ed-bar button.pp-ed-show .pp-t, .pp-ed-bar button.pp-ed-exit .pp-t { display: none; } }
+
+
+/* ---- 下：状態の帯(スライドの番号・ページ・ノート) ---- */
+.pp-ed-status {
+  position: fixed; left: 0; right: 0; bottom: 0; height: var(--pp-ed-bottom, 28px); z-index: 1000; box-sizing: border-box;
+  display: flex; align-items: center; gap: 16px; padding: 0 14px; background: #f5f5f5; color: #424242; border-top: 1px solid #e0e0e0;
+  font: 12px system-ui, -apple-system, "Segoe UI", "Hiragino Sans", "Noto Sans JP", sans-serif;
+}
+.pp-ed-status .pp-ed-pos { font-variant-numeric: tabular-nums; }
+.pp-ed-status .pp-ed-key { font: 11px ui-monospace, Menlo, monospace; color: #707070; }
+.pp-ed-status .pp-ed-sp { flex: 1; }
+.pp-ed-status button { display: inline-flex; align-items: center; gap: 4px; height: 22px; padding: 0 8px; border: 1px solid transparent; border-radius: 4px; background: transparent; font: inherit; color: inherit; cursor: pointer; }
+.pp-ed-status button:hover { background: #e6e6e6; }
+.pp-ed-status button.pp-on { background: #e1ecf8; color: #0f6cbd; }
+.pp-ed-status button svg { width: 15px; height: 15px; fill: none; stroke: currentColor; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
+
+.pp-ed-pop {
+  position: fixed; z-index: 1003; min-width: 140px; padding: 4px;
+  background: #fff; color: #222; border: 1px solid #ccc; border-radius: 6px; box-shadow: 0 6px 20px rgba(0,0,0,.18);
+  font: 13px system-ui, -apple-system, "Hiragino Sans", "Noto Sans JP", sans-serif;
+}
+.pp-ed-pop button { display: flex; align-items: center; gap: 8px; width: 100%; padding: 6px 10px; border: 0; background: transparent; font: inherit; text-align: left; cursor: pointer; border-radius: 4px; }
+.pp-ed-pop button:hover { background: #eef2ff; }
+.pp-ed-sw { display: inline-block; width: 14px; height: 14px; border-radius: 3px; border: 1px solid rgba(0,0,0,.2); background: var(--pp-fg, #222); }
+.pp-c1-sw { background: var(--pp-ed-c1); } .pp-c2-sw { background: var(--pp-ed-c2); } .pp-c3-sw { background: var(--pp-ed-c3); }
+.pp-c4-sw { background: var(--pp-ed-c4); } .pp-c5-sw { background: var(--pp-ed-c5); } .pp-c6-sw { background: var(--pp-ed-c6); }
+
+.pp-ed-toast {
+  position: fixed; left: calc(50% + var(--pp-ed-side-w, 0px) / 2); bottom: calc(var(--pp-ed-notes-h, 0px) + var(--pp-ed-bottom, 0px) + 24px); transform: translateX(-50%) translateY(20px); z-index: 1004;
+  max-width: 80vw; padding: 10px 18px; border-radius: 8px; background: #1f2937; color: #fff;
+  font: 14px system-ui, -apple-system, "Hiragino Sans", "Noto Sans JP", sans-serif;
+  opacity: 0; pointer-events: none; transition: opacity .2s, transform .2s;
+}
+.pp-ed-toast.pp-show { opacity: 1; transform: translateX(-50%); }
+.pp-ed-toast.pp-err { background: #b91c1c; }
+
+/* ---- 左のスライド一覧(段階 2)。縮小表示はスライドの実寸を --pp-ed-th-k 倍にしたもの ---- */
+.pp-ed-side {
+  position: fixed; top: var(--pp-ed-top, 120px); left: 0; bottom: var(--pp-ed-bottom, 28px); width: var(--pp-ed-side-w, 236px); z-index: 999; overflow-y: auto;
+  background: #f5f5f5; color: #242424; border-right: 1px solid #e0e0e0; box-sizing: border-box; padding: 8px 8px 40px 4px;
+  font: 12px/1.35 system-ui, -apple-system, "Hiragino Sans", "Noto Sans JP", sans-serif;
+}
+.pp-ed-side .pp-sec { margin: 10px 0 4px 26px; padding: 3px 6px; font-weight: 700; color: #92400e; background: #fde7c4; border-radius: 4px; cursor: default; }
+.pp-ed-side .pp-sec small { font-weight: 400; color: #78350f; margin-right: 4px; }
+.pp-ed-side .pp-sl { display: grid; grid-template-columns: 22px 1fr; column-gap: 4px; padding: 4px 0; margin: 2px 0; cursor: pointer; }
+.pp-ed-side .pp-sl .pp-n { color: #555; text-align: right; font-variant-numeric: tabular-nums; padding-top: 2px; }
+.pp-ed-side .pp-sl .pp-thb {
+  position: relative; height: var(--pp-ed-th-h, 100px); overflow: hidden; border-radius: 3px;
+  outline: 1px solid #c8c8c8; background: var(--pp-bg, #fff);   /* スライドの地(shell.css の .backgrounds と同じ) */
+}
+.pp-ed-side .pp-sl:hover .pp-thb { outline: 2px solid #c8c8c8; outline-offset: 2px; }
+.pp-ed-side .pp-sl.pp-cur .pp-thb { outline: 2.5px solid #c43e1c; outline-offset: 2px; }
+.pp-ed-side .pp-sl .pp-k { grid-column: 2; color: #777; font: 10px ui-monospace, Menlo, monospace; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; padding-top: 2px; }
+.pp-ed-side .pp-sl .pp-k:empty { display: none; }
+.pp-ed-side .pp-sl.pp-dirty .pp-n::after { content: "●"; display: block; color: #d97706; font-size: 9px; }
+.pp-ed-side .pp-sl.pp-auto .pp-thb { opacity: .7; }
+.pp-ed-side .pp-sl.pp-drop-before { box-shadow: 0 -3px 0 #2563eb; }
+.pp-ed-side .pp-sl.pp-drop-after { box-shadow: 0 3px 0 #2563eb; }
+.pp-ed-side .pp-sl.pp-dragging { opacity: .4; }
+/* 縮小表示：.reveal の中身をスライドの実寸で描いて縮める(操作はできない) */
+.pp-ed-side .reveal.pp-th {
+  position: absolute !important; inset: 0; width: auto; height: auto; overflow: hidden; pointer-events: none; user-select: none;
+}
+.pp-ed-side .pp-th-bg { position: absolute; inset: 0; background-repeat: no-repeat; }
+.pp-ed-side .reveal.pp-th > .slides {
+  position: absolute !important; left: 0; top: 0; right: auto; bottom: auto; margin: 0;
+  width: var(--pp-ed-slide-w, 1280px) !important; height: var(--pp-ed-slide-h, 720px) !important;
+  transform: scale(var(--pp-ed-th-k, 0.15)) !important; transform-origin: 0 0; zoom: 1 !important; perspective: none;
+}
+.pp-ed-side .reveal.pp-th > .slides > section {
+  display: block !important; position: absolute !important; left: 0 !important; top: 0 !important;
+  width: 100% !important; height: 100% !important; opacity: 1 !important; visibility: visible !important;
+  transform: none !important; transition: none !important;
+}
+
+/* ---- 下のノート ---- */
+.pp-ed-notes {
+  position: fixed; left: var(--pp-ed-side-w, 236px); right: 0; bottom: var(--pp-ed-bottom, 28px); height: var(--pp-ed-notes-h, 150px); z-index: 999;
+  background: #fff; color: #242424; border-top: 1px solid #e0e0e0; box-sizing: border-box; overflow-y: auto;
+  font: 15px/1.6 system-ui, -apple-system, "Hiragino Sans", "Noto Sans JP", sans-serif;
+}
+html.pp-ed-nonotes .pp-ed-notes { display: none; }
+.pp-ed-notes-body { min-height: 100%; padding: 10px 16px; box-sizing: border-box; outline: none; white-space: normal; }
+.pp-ed-notes-body:empty::before { content: attr(data-ph); color: #999; }
+.pp-ed-notes-body[contenteditable=false] { background: #f7f7f7; color: #777; }
+
+/* ---- 境目(ドラッグで大きさを変える) ---- */
+.pp-ed-split-v { position: fixed; top: var(--pp-ed-top, 120px); bottom: var(--pp-ed-bottom, 28px); left: calc(var(--pp-ed-side-w, 236px) - 3px); width: 7px; z-index: 1001; cursor: col-resize; }
+.pp-ed-split-h { position: fixed; left: var(--pp-ed-side-w, 236px); right: 0; bottom: calc(var(--pp-ed-notes-h, 150px) + var(--pp-ed-bottom, 28px) - 3px); height: 7px; z-index: 1001; cursor: row-resize; }
+.pp-ed-split-v:hover, .pp-ed-split-v.pp-on, .pp-ed-split-h:hover, .pp-ed-split-h.pp-on { background: rgba(37, 99, 235, .35); }
+.pp-ed-pop .pp-ed-pop-h { padding: 6px 10px 2px; font-size: 11px; color: #666; }
+.pp-ed-pop hr { border: 0; border-top: 1px solid #e5e5e5; margin: 4px 0; }
+
+/* ---- 部品の選択枠(段階 3)。縁をドラッグで移動、四隅と辺の四角で大きさ ---- */
+.pp-ed-sels { position: fixed; inset: 0; z-index: 998; pointer-events: none; }
+.pp-ed-sel { position: absolute; pointer-events: none; outline: 2px solid #2563eb; outline-offset: 0; box-sizing: border-box; }
+.pp-ed-sel.pp-multi { outline: 1.5px solid #2563eb; }
+.pp-ed-sel.pp-multi.pp-main { outline-width: 2.5px; }
+/* 位置合わせのガイド線(赤紫)と範囲選択の枠 */
+.pp-ed-guides { position: fixed; inset: 0; z-index: 997; pointer-events: none; }
+.pp-ed-guide { position: absolute; background: #db2777; }
+.pp-ed-guide.pp-gv { width: 1px; margin-left: -0.5px; } .pp-ed-guide.pp-gh { height: 1px; margin-top: -0.5px; }
+.pp-ed-guide.pp-mid { background: repeating-linear-gradient(var(--pp-g-dir, 180deg), #db2777 0 6px, transparent 6px 10px); }
+.pp-ed-guide.pp-gh.pp-mid { --pp-g-dir: 90deg; }
+.pp-ed-marquee { position: absolute; border: 1px solid #2563eb; background: rgba(37, 99, 235, .1); }
+.pp-ed-sel .pp-edge { position: absolute; pointer-events: auto; cursor: move; }
+.pp-ed-sel .pp-edge.pp-edge-top { left: 0; right: 0; top: -5px; height: 8px; }
+.pp-ed-sel .pp-edge.pp-edge-bottom { left: 0; right: 0; bottom: -5px; height: 8px; }
+.pp-ed-sel .pp-edge.pp-edge-left { top: 0; bottom: 0; left: -5px; width: 8px; }
+.pp-ed-sel .pp-edge.pp-edge-right { top: 0; bottom: 0; right: -5px; width: 8px; }
+.pp-ed-sel .pp-hd { position: absolute; width: 10px; height: 10px; margin: -6px 0 0 -6px; pointer-events: auto; background: #fff; border: 1.5px solid #2563eb; border-radius: 2px; box-sizing: border-box; }
+.pp-ed-sel .pp-hd.pp-hd-nw { left: 0; top: 0; cursor: nwse-resize; } .pp-ed-sel .pp-hd.pp-hd-n { left: 50%; top: 0; cursor: ns-resize; }
+.pp-ed-sel .pp-hd.pp-hd-ne { left: 100%; top: 0; cursor: nesw-resize; } .pp-ed-sel .pp-hd.pp-hd-e { left: 100%; top: 50%; cursor: ew-resize; }
+.pp-ed-sel .pp-hd.pp-hd-se { left: 100%; top: 100%; cursor: nwse-resize; } .pp-ed-sel .pp-hd.pp-hd-s { left: 50%; top: 100%; cursor: ns-resize; }
+.pp-ed-sel .pp-hd.pp-hd-sw { left: 0; top: 100%; cursor: nesw-resize; } .pp-ed-sel .pp-hd.pp-hd-w { left: 0; top: 50%; cursor: ew-resize; }
+.pp-ed-sel .pp-lab { position: absolute; left: -2px; top: -24px; padding: 2px 6px; background: #2563eb; color: #fff; border-radius: 3px 3px 0 0; white-space: nowrap;
+  font: 11px ui-monospace, Menlo, monospace; }
+
+/* ---- 名前の変更 ---- */
+.pp-ed-dlg { position: fixed; inset: 0; z-index: 1005; background: rgba(0, 0, 0, .25); display: flex; align-items: flex-start; justify-content: center; padding-top: 110px;
+  font: 13px/1.4 system-ui, -apple-system, "Hiragino Sans", "Noto Sans JP", sans-serif; color: #222; }
+.pp-ed-dlg form { width: min(560px, 92vw); background: #fff; border-radius: 10px; box-shadow: 0 12px 40px rgba(0, 0, 0, .25); padding: 18px 22px 16px; box-sizing: border-box; }
+.pp-ed-dlg h3 { margin: 0 0 12px; font-size: 16px; }
+.pp-ed-dlg label { display: block; margin: 0 0 12px; font-weight: 700; }
+.pp-ed-dlg label small { display: block; font-weight: 400; color: #777; margin-top: 3px; }
+.pp-ed-dlg .pp-row { display: flex; align-items: center; gap: 4px; margin-top: 4px; }
+.pp-ed-dlg .pp-ext { font: 12px ui-monospace, Menlo, monospace; color: #666; font-weight: 400; white-space: nowrap; }
+.pp-ed-dlg input { box-sizing: border-box; width: 100%; margin-top: 4px; padding: 6px 8px; border: 1px solid #bbb; border-radius: 5px; font: 14px system-ui, sans-serif; }
+.pp-ed-dlg .pp-row input { margin-top: 0; flex: 1; font-family: ui-monospace, Menlo, monospace; }
+.pp-ed-dlg input:focus { outline: 2px solid #93c5fd; border-color: #2563eb; }
+.pp-ed-dlg .pp-note { color: #666; margin: 0 0 12px; }
+.pp-ed-dlg .pp-err { color: #b91c1c; margin: 0 0 10px; }
+.pp-ed-dlg .pp-btns { display: flex; justify-content: flex-end; gap: 8px; }
+.pp-ed-dlg button { padding: 6px 14px; border: 1px solid #bbb; border-radius: 5px; background: #fff; font: inherit; cursor: pointer; }
+.pp-ed-dlg button.pp-ok { background: #2563eb; border-color: #2563eb; color: #fff; }
+
+.pp-ed-pop button svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; flex: none; }
+
+/* ---- 自動保存のスイッチ(タイトルの行) ---- */
+.pp-ed-bar button.pp-ed-auto { gap: 6px; height: 26px; padding: 0 8px; color: #424242; }
+.pp-ed-bar button.pp-ed-auto .pp-t { font-size: 12px; }
+.pp-ed-auto .pp-sw { position: relative; width: 28px; height: 14px; border-radius: 7px; background: #c8c8c8; transition: background .15s; }
+.pp-ed-auto .pp-sw::after { content: ""; position: absolute; top: 2px; left: 2px; width: 10px; height: 10px; border-radius: 50%; background: #fff; transition: left .15s; }
+.pp-ed-auto.pp-on .pp-sw { background: #c43e1c; }
+.pp-ed-auto.pp-on .pp-sw::after { left: 16px; }
+.pp-ed-auto .pp-st { font-size: 11px; color: #707070; min-width: 3em; text-align: left; }
+.pp-ed-dlg .pp-row button { flex: none; }
+.pp-ed-dlg input[readonly] { background: #f7f7f7; font-size: 12px; }
+
+/* マウスを乗せたときの説明(editor.js が画面の中に収まる位置に出す) */
+.pp-ed-tip { position: fixed; z-index: 1006; display: none; max-width: min(420px, 90vw); padding: 5px 9px; border-radius: 4px; pointer-events: none;
+  background: #242424; color: #fff; font: 12px/1.4 system-ui, -apple-system, "Hiragino Sans", "Noto Sans JP", sans-serif; }
+
+/* ---- 挿入した部品(図形・線・テキストボックス・画像・表) ---- */
+html.pp-ed-drawing .reveal .slides, html.pp-ed-drawing .reveal .slides *, html.pp-ed-drawing .reveal-viewport { cursor: crosshair !important; }
+html.pp-editing .reveal .pp-shape > .pp-sh-t[data-pp-ed] { outline-offset: 0; }
+html.pp-editing .reveal .pp-shape.pp-tb:not(:has(.pp-sh-t:not(:empty))) { outline: 1px dashed rgba(120, 120, 120, .5); }   /* 空のテキストボックスも見えるように */
+html.pp-editing .reveal .pp-tbl td:empty::after, html.pp-editing .reveal .pp-tbl th:empty::after { content: "\200b"; }
+/* 回転のハンドル(上の丸)と線の両端 */
+.pp-ed-sel .pp-rot { position: absolute; left: 50%; top: -30px; width: 13px; height: 13px; margin-left: -7px; border-radius: 50%; box-sizing: border-box;
+  background: #fff; border: 1.5px solid #2563eb; pointer-events: auto; cursor: grab; }
+.pp-ed-sel .pp-rot::after { content: ""; position: absolute; left: 4.5px; top: 11px; width: 1px; height: 17px; background: #2563eb; }
+.pp-ed-sel.pp-has-rot .pp-lab { top: auto; bottom: -24px; border-radius: 0 0 3px 3px; }
+.pp-ed-sel.pp-lsel { outline: none; }
+.pp-ed-sel .pp-hd.pp-hd-p { width: 12px; height: 12px; margin: -6px 0 0 -6px; border-radius: 50%; cursor: move; }
+/* コンテキスト タブ(図形の書式・テーブル) */
+.pp-ed-tab.pp-ctx { color: #0f6cbd !important; }
+.pp-ed-tab.pp-ctx[hidden] { display: none; }
+/* 図形の一覧と表の大きさの選択 */
+.pp-ed-pop.pp-ed-gal { width: 312px; max-height: 70vh; overflow-y: auto; }
+.pp-ed-gal-row { display: flex; flex-wrap: wrap; gap: 2px; padding: 2px 6px 6px; }
+.pp-ed-pop .pp-ed-gal-row button { width: 34px; height: 30px; padding: 0; justify-content: center; }
+.pp-ed-pop .pp-ed-gal-row button svg { width: 22px; height: 22px; }
+.pp-ed-tblpick .pp-ed-tgrid { display: grid; grid-template-columns: repeat(10, 18px); gap: 3px; padding: 6px 10px; }
+.pp-ed-pop.pp-ed-tblpick .pp-ed-tgrid button { width: 18px; height: 18px; padding: 0; border: 1px solid #c8c8c8; border-radius: 2px; background: #fff; }
+.pp-ed-pop.pp-ed-tblpick .pp-ed-tgrid button.pp-on { background: #fde2d8; border-color: #c43e1c; }
+.pp-ed-tblpick .pp-cap { padding: 2px 10px 6px; font-size: 12px; color: #555; }
+/* 色・線のメニュー */
+.pp-ed-sw.pp-none { background: linear-gradient(135deg, #fff 45%, #d13438 45%, #d13438 55%, #fff 55%); }
+.pp-ed-sw.pp-more { background: conic-gradient(#e81123, #ffb900, #16c60c, #0078d4, #886ce4, #e81123); }
+.pp-ed-lw { display: inline-block; width: 40px; background: #333; border-radius: 1px; }
+.pp-ed-dash { display: inline-block; width: 40px; height: 0; border-top: 2px solid #333; }
+.pp-ed-dash.pp-d { border-top-style: dashed; } .pp-ed-dash.pp-o { border-top-style: dotted; }
+.pp-ed-pop { max-height: calc(100vh - 140px); overflow-y: auto; }
+.pp-ed-colorin { position: fixed; left: 50%; top: 120px; width: 1px; height: 1px; opacity: 0; pointer-events: none; }
+/* 位置とサイズ */
+.pp-ed-dlg .pp-grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 0 14px; }
+.pp-ed-dlg label.pp-num input { font-family: ui-monospace, Menlo, monospace; }
+.pp-ed-dlg label.pp-chk { display: flex; align-items: center; gap: 6px; font-weight: 400; }
+.pp-ed-dlg label.pp-chk input { width: auto; margin: 0; }

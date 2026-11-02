@@ -1,0 +1,62 @@
+/* ============================================================
+   SUMI THEME — DARK tokens
+   単純反転ではなく「暖色系のダーク紙」として独立設計(webpaper
+   DESIGN.md §2.7 の思想を保存)。意味は保存し明度だけ振り直す —
+   ライトで意味のなかった色がダークで増えてはならない。
+   ============================================================ */
+:root {
+  /* ---- ダーク紙とパネル(真っ黒・純グレー不使用) ---- */
+  --bg-page: #1b1a18;
+  --bg-panel: #242320;       /* 紙より一段明るい面 */
+  --bg-code: #2b2a26;
+  --bg-neutral: #2c2b27;
+  --bg-terminal: #0f0e0d;    /* ターミナルは常にページより暗い面 */
+
+  /* ---- インク(純白禁止 — 柔らかいオフホワイト) ---- */
+  --ink: #ece8e1;
+  --ink-mid: #c2bcb1;
+  --gray-caption: #a49e94;   /* webpaper #98938a → 投影向けに一段明るく */
+  --gray-faint: #635f57;
+
+  /* ---- 罫線 ---- */
+  --line-strong: #d5d0c7;
+  --line: #4a4741;
+  --line-soft: #2e2c29;
+
+  /* ---- 意味のある色(役割はライトと同一) ---- */
+  --accent: #86b4e8;         /* 明るい群青側へ */
+  --accent-bright: #a9c8ee;
+  --accent-rgb: 134, 180, 232;
+  --crimson: #e0687b;
+
+  /* ---- チャート ---- */
+  --chart-main: #e8e4dc;
+  --chart-compare: #6e695f;
+  --chart-grid: #3b3935;
+
+  /* ---- パステル(暗色対応) ---- */
+  --pastel-lavender: #322f4e;
+  --pastel-blue: #24384f;
+  --pastel-mint: #273a2e;
+
+  /* ---- ターミナル ---- */
+  --term-ink: #d0cdc7;
+  --term-label: #e08098;
+  --term-token: #8cb0d8;
+
+  /* ---- カバー(白抜き反転: 明帯+墨文字 — 暗い部屋で最も明るい一枚) ---- */
+  --cover-bg: #ece8e1;
+  --cover-ink: #171614;
+  --cover-muted: rgba(23, 22, 20, 0.62);
+  --cover-rule: rgba(23, 22, 20, 0.38);
+
+  /* ---- 家具・進捗(グラデは両モード共通 — レール意匠の保存) ---- */
+  --footer-ink: #98938a;
+  --progress-fill: linear-gradient(90deg, #23408e 0%, #3b63c4 55%, #86b4e8 100%);
+}
+
+/* エディター(runtime/editor.js)の文字色パレット */
+:root {
+  --pp-ed-c1: var(--accent); --pp-ed-c1-label: "群青（強調）";
+  --pp-ed-hl: rgba(var(--accent-rgb), 0.18);
+}

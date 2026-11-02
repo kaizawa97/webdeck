@@ -1,0 +1,241 @@
+/* ============================================================
+   SUMI THEME — components(部品カタログ)
+   出自: webpaper design-tokens.css §5〜§14 のスライドスケール翻案。
+   全て vars のトークンのみ参照(リテラル色禁止)。
+   丸みの規律: 2px(チャート箱・統計)/ 8px(パネル・カード)/ 3px(チップ)。
+   バー・棒・配線は常にスクエア。影はゼロ。
+   ============================================================ */
+
+/* ---- 格のある枠: titled-panel(黒枠+中央太字タイトル) ---- */
+.titled-panel {
+  background: var(--bg-panel);
+  border: 2px solid var(--line-strong);
+  border-radius: 8px;
+  overflow: hidden;
+}
+.titled-panel > .panel-title {
+  text-align: center;
+  font-size: 24px;
+  font-weight: 700;
+  padding: 12px 20px;
+  border-bottom: 2px solid var(--line-strong);
+  margin: 0;
+}
+.titled-panel > .panel-body {
+  padding: 18px 24px;
+  font-size: 24px;
+  line-height: 1.6;
+}
+
+/* ---- 日常のカード(薄枠)+グリッド ---- */
+.card {
+  background: var(--bg-panel);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 18px 22px;
+}
+.card-title {
+  font-size: 24px;
+  font-weight: 700;
+  margin: 0 0 8px;
+}
+.card-title--dot::before {
+  content: "";
+  display: inline-block;
+  width: 12px; height: 12px;
+  border-radius: 50%;
+  background: var(--ink);
+  margin-right: 10px;
+}
+.card p { margin: 0; font-size: 21px; line-height: 1.6; color: var(--ink-mid); }
+.grid { display: grid; gap: 18px; }
+.grid--2 { grid-template-columns: 1fr 1fr; }
+.grid--3 { grid-template-columns: 1fr 1fr 1fr; }
+
+/* ---- パステル分類カード(枠なし淡色地。色=意味コーディング) ---- */
+.pastel-card {
+  border: none;
+  border-radius: 8px;
+  padding: 18px 22px;
+}
+.pastel-card--lavender { background: var(--pastel-lavender); }
+.pastel-card--blue     { background: var(--pastel-blue); }
+.pastel-card--mint     { background: var(--pastel-mint); }
+.pastel-card .card-title { margin-bottom: 8px; }
+.pastel-card p { margin: 0; font-size: 21px; line-height: 1.6; }
+
+/* ---- チップ(短いタグ。図中の色と同色対応で凡例代わり) ---- */
+.chip {
+  display: inline-block;
+  background: var(--bg-panel);
+  border: 2px solid var(--line-strong);
+  border-radius: 3px;
+  font-size: 18px;
+  font-weight: 700;
+  line-height: 1.3;
+  padding: 3px 14px;
+  vertical-align: middle;
+}
+.chip--gray     { border-color: var(--line); color: var(--ink-mid); }
+.chip--lavender { background: var(--pastel-lavender); border-color: var(--line); }
+.chip--blue     { background: var(--pastel-blue); border-color: var(--line); }
+.chip--mint     { background: var(--pastel-mint); border-color: var(--line); }
+
+/* ---- 統計タイル(KPI)。深紅は .stat-value--key 1 つだけ ---- */
+.stat-row { display: flex; gap: 18px; }
+.stat-row > .stat { flex: 1 1 0; }
+.stat {
+  background: var(--bg-panel);
+  border: 1px solid var(--line);
+  border-radius: 2px;
+  padding: 22px 18px 18px;
+  text-align: center;
+}
+.stat .stat-value {
+  display: block;
+  font-size: 72px;
+  font-weight: 700;
+  line-height: 1.1;
+  font-variant-numeric: tabular-nums;
+}
+.stat .stat-value--key { color: var(--crimson); }
+.stat .stat-label {
+  display: block;
+  font-size: 19px;
+  color: var(--gray-caption);
+  margin-top: 8px;
+  line-height: 1.4;
+}
+
+/* ---- テーブル(水平罫のみ。th 下罫は墨) ---- */
+.reveal table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 22px;
+  line-height: 1.5;
+}
+.reveal table th {
+  font-weight: 700;
+  text-align: left;
+  padding: 10px 16px;
+  border-bottom: 2.5px solid var(--line-strong);
+}
+.reveal table td {
+  padding: 10px 16px;
+  border-bottom: 1px solid var(--line);
+}
+.reveal table td.num { text-align: right; font-variant-numeric: tabular-nums; }
+.reveal table td.mark { text-align: center; font-weight: 700; }
+.reveal table td.mark--best { color: var(--crimson); }
+.reveal table tr.row-highlight { background: var(--pastel-blue); }
+
+/* ---- コード 2 段階(スライドでは 10 行程度が上限) ---- */
+.reveal pre {
+  background: var(--bg-code);
+  font-family: var(--f-mono);
+  font-size: 20px;
+  line-height: 1.55;
+  padding: 18px 22px;
+  border-radius: 2px;
+  margin: 0;
+  box-shadow: none;
+  width: auto;
+}
+.reveal pre code { background: none; padding: 0; max-height: none; }
+.reveal code {
+  font-family: var(--f-mono);
+  background: var(--bg-neutral);
+  border-radius: 3px;
+  padding: 1px 8px;
+  font-size: 0.88em;
+}
+.terminal {
+  background: var(--bg-terminal);
+  color: var(--term-ink);
+  font-family: var(--f-mono);
+  font-size: 20px;
+  line-height: 1.55;
+  padding: 18px 22px;
+  border-radius: 8px;
+}
+.terminal .t-label { color: var(--term-label); }
+.terminal .t-token { color: var(--term-token); }
+.terminal .t-dim   { opacity: 0.55; }
+
+/* ---- チャート箱(チャートは必ずこの白箱の中に。凡例なし直接ラベル) ---- */
+.chart-panel {
+  background: var(--bg-panel);
+  border: 1px solid var(--line);
+  border-radius: 2px;
+  padding: 16px 24px 14px;
+}
+.chart-panel .chart-title {
+  text-align: center;
+  font-size: 24px;
+  font-weight: 700;
+  margin: 0 0 2px;
+}
+.chart-panel .chart-subtitle {
+  text-align: center;
+  font-size: 18px;
+  color: var(--gray-caption);
+  margin: 0 0 10px;
+}
+.chart-panel .chart-caption {
+  font-size: 18px;
+  color: var(--gray-caption);
+  margin: 10px 0 0;
+}
+
+/* ---- CSS 横棒(主役=墨、比較=グレー、強調は 1 本だけ群青。棒はスクエア端) ---- */
+.hbar-row {
+  display: grid;
+  grid-template-columns: 220px 1fr 110px;
+  align-items: center;
+  column-gap: 16px;
+  margin: 12px 0;
+  font-size: 21px;
+}
+.hbar-row .hbar-label { text-align: right; color: var(--ink-mid); }
+.hbar-row .hbar-track { background: var(--bg-neutral); height: 30px; }
+.hbar-row .hbar-bar { background: var(--chart-main); height: 100%; }
+.hbar-row .hbar-bar--compare { background: var(--chart-compare); }
+.hbar-row .hbar-bar--accent  { background: var(--accent); }
+.hbar-row .hbar-value { font-variant-numeric: tabular-nums; }
+
+/* ---- インライン SVG チャート語彙(テキストは 18px 以上) ---- */
+.svg-axis   { stroke: var(--gray-faint); stroke-width: 1.2; }
+.svg-grid   { stroke: var(--chart-grid); stroke-width: 1; }
+.svg-tick-text { fill: var(--gray-caption); font-size: 18px; font-family: var(--f-body); }
+.svg-label  { fill: var(--ink); font-size: 20px; font-family: var(--f-body); }
+.svg-label--bold { font-weight: 700; }
+.svg-label--muted { fill: var(--gray-caption); }
+.svg-series-main    { stroke: var(--chart-main); stroke-width: 3.5; fill: none; }
+.svg-series-compare { stroke: var(--chart-compare); stroke-width: 2.5; fill: none; }
+.svg-dot-main    { fill: var(--chart-main); }
+.svg-dot-compare { fill: var(--chart-compare); }
+.svg-bar-main    { fill: var(--chart-main); }
+.svg-bar-compare { fill: var(--chart-compare); }
+.svg-bar-accent  { fill: var(--accent); }
+.svg-highlight      { fill: var(--crimson); }
+.svg-highlight-line { stroke: var(--crimson); stroke-width: 2; stroke-dasharray: 6 5; fill: none; }
+.svg-highlight-ring { stroke: var(--crimson); stroke-width: 2.5; fill: none; }
+.svg-anno { fill: var(--crimson); font-size: 19px; font-weight: 700; font-family: var(--f-body); }
+
+/* ---- 図解 SVG 語彙(白ノード+墨枠+直交配線。rx はマークアップ側で 8) ---- */
+.diagram { width: 100%; }
+.dg-node { fill: var(--bg-panel); stroke: var(--ink); stroke-width: 2; }
+.dg-node--lavender { fill: var(--pastel-lavender); }
+.dg-node--blue     { fill: var(--pastel-blue); }
+.dg-node--mint     { fill: var(--pastel-mint); }
+.dg-node--ink      { fill: var(--ink); }
+.dg-wire { stroke: var(--ink); stroke-width: 2; fill: none; }
+.dg-wire--dashed { stroke-dasharray: 7 6; }
+.dg-wire--muted  { stroke: var(--gray-faint); }
+.dg-arrow { fill: var(--ink); }
+.dg-junction { fill: var(--ink); }
+.dg-group { fill: none; stroke: var(--gray-faint); stroke-width: 1.5; stroke-dasharray: 5 5; }
+.dg-text { fill: var(--ink); font-size: 20px; font-family: var(--f-body); }
+.dg-text--bold { font-weight: 700; }
+.dg-text--desc { fill: var(--gray-caption); font-size: 18px; }
+.dg-text--white { fill: var(--bg-page); }

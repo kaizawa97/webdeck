@@ -1,0 +1,25 @@
+/* SUMI LIGHT — webdeck shell 変数へのマッピング
+   (runtime/shell.css が参照する --pp-* をテーマ値に接続する) */
+:root {
+  --pp-bg: #faf8f4;
+  --pp-letterbox: #e6e2da;  /* 紙より一段沈む生成り(机の上の紙のメタファー) */
+  --pp-canvas-edge: rgba(17, 17, 17, 0.28); /* レターボックス時のスライド縁ライン */
+  --pp-fg: #111111;
+  --pp-accent: #2c4fae;                    /* 群青 */
+  --pp-font: var(--f-body);
+  --pp-progress-track: rgba(59, 99, 196, 0.12);
+
+  /* dock: 白パネル+墨字(webpaper のチップの佇まい) */
+  --pp-dock-bg: rgba(255, 255, 255, 0.95);
+  --pp-dock-fg: rgba(17, 17, 17, 0.92);
+  --pp-dock-hover: rgba(17, 17, 17, 0.08);
+  --pp-dock-active: #2c4fae;
+  --pp-dock-border: rgba(17, 17, 17, 0.16);
+  --pp-dock-shadow: 0 6px 24px rgba(17, 17, 17, 0.16);
+}
+
+/* scroll view のスクロールバー配色(RGB トリプレット。reveal.css が rgba() で消費) */
+.reveal-viewport {
+  --r-overlay-element-bg-color: 17, 17, 17;
+  --r-overlay-element-fg-color: 250, 248, 244;
+}

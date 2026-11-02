@@ -1,0 +1,25 @@
+/* SUMI DARK — webdeck shell 変数へのマッピング
+   (runtime/shell.css が参照する --pp-* をテーマ値に接続する) */
+:root {
+  --pp-bg: #1b1a18;
+  --pp-letterbox: #0f0e0d;  /* ダーク紙より一段暗く — スライドが面として浮く */
+  --pp-canvas-edge: rgba(236, 232, 225, 0.26);
+  --pp-fg: #ece8e1;
+  --pp-accent: #86b4e8;                    /* 明るい群青 */
+  --pp-font: var(--f-body);
+  --pp-progress-track: rgba(134, 180, 232, 0.14);
+
+  /* dock: ダーク紙のパネル面から一段持ち上げる */
+  --pp-dock-bg: rgba(36, 35, 32, 0.94);
+  --pp-dock-fg: rgba(236, 232, 225, 0.94);
+  --pp-dock-hover: rgba(236, 232, 225, 0.10);
+  --pp-dock-active: #86b4e8;
+  --pp-dock-border: rgba(236, 232, 225, 0.16);
+  --pp-dock-shadow: 0 6px 24px rgba(0, 0, 0, 0.5);
+}
+
+/* scroll view のスクロールバー配色(RGB トリプレット。reveal.css が rgba() で消費) */
+.reveal-viewport {
+  --r-overlay-element-bg-color: 236, 232, 225;
+  --r-overlay-element-fg-color: 27, 26, 24;
+}

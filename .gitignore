@@ -1,0 +1,4 @@
+node_modules/
+decks/*/out/
+themes/*/starter/out/
+*.log

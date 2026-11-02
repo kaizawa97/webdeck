@@ -1,0 +1,411 @@
+/* ============================================================================
+   webdeck — runtime shell stylesheet
+   ----------------------------------------------------------------------------
+   役割:
+   1. 1280×720 固定キャンバスの座標系規約(スライドは絶対配置で自由レイアウト)
+   2. Reveal 組み込みテーマの不在を補う最小ベース(テーマ themes/ が上書きする)
+   3. コントロールドック(.pp-dock)の UI
+
+   テーマが上書きする CSS 変数(すべて --pp- prefix):
+     --pp-bg            ビューポート背景
+     --pp-fg            既定文字色
+     --pp-accent        アクセント(プログレスバー等)
+     --pp-font          既定フォントスタック
+     --pp-dock-bg / --pp-dock-fg / --pp-dock-hover / --pp-dock-active
+     --pp-dock-border / --pp-dock-shadow
+   ============================================================================ */
+
+/* ---------------------------------------------------------------- viewport */
+
+.reveal-viewport {
+  background-color: var(--pp-bg, #ffffff);
+  --r-link-color: var(--pp-accent, #5c7080); /* reveal.css 内部参照用 */
+}
+
+/* ------------------------------------------------- アスペクト比の完全固定
+   Reveal はスライド本文を 16:9 のままレターボックス表示するが、背景レイヤー
+   (.backgrounds — data-background-image の描画先)はウィンドウ全面に広がる
+   ため、背景=デザインのテーマでは見た目のアスペクト比が窓形状に追従して
+   しまう。背景レイヤーを shell が配布するキャンバス実寸(--pp-canvas-*)に
+   一致させ、余白は専用のレターボックス色で塗ることで、どんなウィンドウ
+   形状でもスライドの見た目を完全に固定する。
+   print / scroll view / overview は各自のレイアウト機構に任せて除外。
+   注意: Reveal 6 は print クラスを html に、scroll クラスを viewport
+   (フルページ構成では body)に付ける — セレクタの掛け先が異なる。 */
+html:not(.reveal-print) .reveal-viewport:not(.reveal-scroll) .reveal:not(.overview) > .backgrounds {
+  left: var(--pp-canvas-l, 0px);
+  top: var(--pp-canvas-t, 0px);
+  width: var(--pp-canvas-w, 100%);
+  height: var(--pp-canvas-h, 100%);
+  background: var(--pp-bg, #ffffff); /* キャンバス地(プレーンスライドの面) */
+}
+html:not(.reveal-print) .reveal-viewport:not(.reveal-scroll) {
+  background-color: var(--pp-letterbox, #12161b);
+}
+
+/* レターボックス表示中はスライドの縁に細いエッジラインを描き、
+   スライド面とレターボックスが同系色(黒×黒など)でも境界が分かるようにする。
+   16:9 ぴったり(全画面投影)では .pp-letterboxed が付かないため線は出ない。 */
+html.pp-letterboxed:not(.reveal-print) .reveal-viewport:not(.reveal-scroll) .reveal:not(.overview) > .backgrounds {
+  box-shadow: 0 0 0 1px var(--pp-canvas-edge, rgba(255, 255, 255, 0.22));
+}
+
+.reveal {
+  font-family: var(--pp-font, system-ui, "Noto Sans JP", sans-serif);
+  font-size: 24px;
+  color: var(--pp-fg, #1a1a1a);
+}
+
+/* ------------------------------------------------------------ slide canvas
+   規約: 各 <section> は 1280×720 の固定キャンバス。
+   - center:false 前提(shell.js の標準 config)
+   - 中身は絶対配置・flex・grid いずれも自由。座標は 1280×720 基準で書く。
+   - overflow は隠さない: はみ出しは「見えるバグ」にして verify で検出する。 */
+
+.reveal .slides { text-align: left; }
+
+.reveal .slides section,
+.reveal .slides section > section {
+  height: 100%; /* .slides が config の width/height を持つ(既定 1280×720、デッキで変更可) */
+  padding: 0;
+  margin: 0;
+  box-sizing: border-box;
+}
+
+.reveal .slides section *,
+.reveal .slides section *::before,
+.reveal .slides section *::after {
+  box-sizing: inherit;
+}
+
+/* ------------------------------------------------------------ progress bar
+   Reveal 組み込みプログレスバー(クリックでジャンプ可能)の配色をテーマに接続 */
+
+.reveal .progress {
+  color: var(--pp-accent, #5c7080);
+  background-color: var(--pp-progress-track, rgba(128, 128, 128, 0.2));
+}
+
+/* ---------------------------------------------------------------- pp-dock
+   画面下端中央、マウスを動かすと現れる半透明のコントロールドック。
+   スライド DOM とは完全に独立(shell.js が body 直下に挿入する)。 */
+
+.pp-dock {
+  position: fixed;
+  left: 50%;
+  bottom: 18px;
+  z-index: 40; /* slide-number(31)・playback(30) より上、pause-overlay(100) より下 */
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  padding: 6px;
+  border-radius: 14px;
+  background: var(--pp-dock-bg, rgba(22, 26, 32, 0.78));
+  color: var(--pp-dock-fg, rgba(255, 255, 255, 0.92));
+  border: 1px solid var(--pp-dock-border, rgba(255, 255, 255, 0.09));
+  box-shadow: var(--pp-dock-shadow, 0 6px 24px rgba(0, 0, 0, 0.28));
+  -webkit-backdrop-filter: blur(14px) saturate(1.2);
+  backdrop-filter: blur(14px) saturate(1.2);
+  font-family: var(--pp-font, system-ui, "Noto Sans JP", sans-serif);
+  transform: translate(-50%, 0);
+  opacity: 1;
+  transition: opacity 0.28s ease, transform 0.28s ease;
+  user-select: none;
+}
+
+.pp-dock.pp-hidden {
+  opacity: 0;
+  transform: translate(-50%, 14px);
+  pointer-events: none;
+}
+
+.pp-dock button {
+  appearance: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  border: 0;
+  border-radius: 9px;
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease, opacity 0.15s ease;
+}
+
+.pp-dock button:hover {
+  background: var(--pp-dock-hover, rgba(255, 255, 255, 0.12));
+}
+
+.pp-dock button:focus-visible {
+  outline: 2px solid var(--pp-accent, #5c7080);
+  outline-offset: -2px;
+}
+
+.pp-dock button.pp-active {
+  color: var(--pp-dock-active, var(--pp-accent, #5c7080));
+  background: var(--pp-dock-hover, rgba(255, 255, 255, 0.12));
+}
+
+.pp-dock button[disabled] {
+  opacity: 0.32;
+  cursor: default;
+  background: transparent;
+}
+
+.pp-dock svg {
+  width: 18px;
+  height: 18px;
+  display: block;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.7;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+/* スライド番号カウンタ(押すとジャンプ入力) */
+.pp-dock .pp-count {
+  width: auto;
+  min-width: 64px;
+  padding: 0 10px;
+  font-size: 13px;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.04em;
+  white-space: nowrap;
+}
+
+.pp-dock .pp-count .pp-count-sep {
+  opacity: 0.45;
+  margin: 0 5px;
+}
+
+.pp-dock .pp-count .pp-count-total {
+  opacity: 0.62;
+}
+
+.pp-dock .pp-sep {
+  width: 1px;
+  height: 20px;
+  margin: 0 5px;
+  background: var(--pp-dock-border, rgba(255, 255, 255, 0.14));
+}
+
+/* ツールチップ(title属性の代わりに即時表示・キーヒント付き) */
+.pp-dock button[data-tip]::after {
+  content: attr(data-tip);
+  position: absolute;
+  bottom: calc(100% + 12px);
+  left: 50%;
+  transform: translateX(-50%) translateY(3px);
+  padding: 5px 9px;
+  border-radius: 7px;
+  background: var(--pp-dock-bg, rgba(22, 26, 32, 0.92));
+  border: 1px solid var(--pp-dock-border, rgba(255, 255, 255, 0.09));
+  color: var(--pp-dock-fg, rgba(255, 255, 255, 0.92));
+  font-size: 11.5px;
+  line-height: 1;
+  white-space: nowrap;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.15s ease 0.25s, transform 0.15s ease 0.25s;
+}
+
+.pp-dock button { position: relative; }
+
+.pp-dock button:hover::after {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+}
+
+/* disabled ボタンのツールチップは全体が減光されて読めないので出さない */
+.pp-dock button[disabled]::after { display: none; }
+
+/* ------------------------------------------------------- jump-to-slide UI
+   Reveal 組み込みの G ジャンプ入力(既定は左上・無背景でタイトルに重なる)を
+   ドックと同じ意匠のパネルとして下端中央に出す */
+.reveal .jump-to-slide {
+  top: auto;
+  left: 50%;
+  bottom: 84px; /* ドックの上 */
+  transform: translateX(-50%);
+  padding: 10px 12px;
+  border-radius: 12px;
+  background: var(--pp-dock-bg, rgba(22, 26, 32, 0.85));
+  border: 1px solid var(--pp-dock-border, rgba(255, 255, 255, 0.09));
+  box-shadow: var(--pp-dock-shadow, 0 6px 24px rgba(0, 0, 0, 0.28));
+  -webkit-backdrop-filter: blur(14px);
+  backdrop-filter: blur(14px);
+}
+.reveal .jump-to-slide input {
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--pp-dock-fg, #fff);
+  border: 1px solid var(--pp-dock-border, rgba(255, 255, 255, 0.14));
+  border-radius: 8px;
+  padding: 6px 10px;
+  font-family: var(--pp-font, system-ui, sans-serif);
+  font-size: 15px;
+}
+.reveal .jump-to-slide input::placeholder { color: var(--pp-dock-fg, #fff); opacity: 0.5; }
+
+/* ---------------------------------------------------------------- pp-grid
+   スライド一覧(タイル)。Reveal 組み込み overview(linear では横一列)の
+   置き換え。縦スクロールはネイティブ(ホイール+スクロールバー)。 */
+.pp-grid {
+  position: fixed;
+  inset: 0;
+  z-index: 60; /* ドック(40)より上、スピーカービュー化オーバーレイ(500)より下 */
+  display: none;
+  background: var(--pp-grid-bg, rgba(15, 18, 23, 0.96));
+  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(10px);
+}
+.pp-grid.pp-open { display: block; }
+
+.pp-grid-scroll {
+  height: 100%;
+  overflow-y: auto; /* マウスホイールで縦スクロール+ネイティブスクロールバー */
+  box-sizing: border-box;
+  padding: 30px 34px 46px;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(216px, 1fr));
+  gap: 20px 18px;
+  align-content: start;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.35) transparent;
+}
+.pp-grid-scroll::-webkit-scrollbar { width: 10px; }
+.pp-grid-scroll::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.28);
+  border-radius: 5px;
+}
+
+.pp-grid-item {
+  appearance: none;
+  border: 0;
+  background: transparent;
+  display: block;
+  padding: 7px;
+  border-radius: 12px;
+  cursor: pointer;
+  text-align: left;
+  color: rgba(255, 255, 255, 0.85);
+  font-family: var(--pp-font, system-ui, "Noto Sans JP", sans-serif);
+}
+.pp-grid-item:hover { background: rgba(255, 255, 255, 0.09); }
+.pp-grid-item:focus-visible { outline: 2px solid var(--pp-accent, #5c7080); }
+.pp-grid-item.pp-cur { background: rgba(255, 255, 255, 0.07); }
+
+.pp-grid-item img {
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  object-fit: cover;
+  display: block;
+  border-radius: 7px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  margin-bottom: 7px;
+}
+/* サムネイルが無い(未 verify・読み込み失敗)スライドは 16:9 の空カード */
+.pp-grid-item.no-thumb::before {
+  content: "";
+  display: block;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  border-radius: 7px;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  margin-bottom: 7px;
+  box-sizing: border-box;
+}
+.pp-grid-item.pp-cur img,
+.pp-grid-item.pp-cur.no-thumb::before {
+  outline: 2.5px solid var(--pp-dock-active, var(--pp-accent, #5c7080));
+  outline-offset: 1px;
+}
+
+.pp-grid-cap {
+  display: flex;
+  gap: 8px;
+  font-size: 12.5px;
+  line-height: 1.45;
+  white-space: nowrap;
+  overflow: hidden;
+}
+.pp-grid-cap .no { opacity: 0.55; font-variant-numeric: tabular-nums; flex: none; }
+.pp-grid-cap .ttl { overflow: hidden; text-overflow: ellipsis; }
+
+html.reveal-print .pp-grid { display: none !important; }
+
+/* ------------------------------------------- scroll view のスクロールバー
+   reveal.css の playhead/marker は has-light/dark-background クラスが付かないと
+   透明になる(本基盤はテーマが背景を塗るため自動検出が働かない)。
+   テーマの shell-hooks が --pp-* に合わせて上書きできるよう既定値を与える */
+.reveal-viewport {
+  --r-overlay-element-bg-color: 0, 0, 0;
+  --r-overlay-element-fg-color: 240, 240, 240;
+}
+
+/* 印刷・PDF出力では出さない(JS側でも生成を抑止している) */
+html.reveal-print .pp-dock { display: none; }
+
+@media print {
+  .pp-dock { display: none !important; }
+  .pp-grid { display: none !important; }
+}
+
+/* ------------------------------------------------- エディターで付ける書式
+   editor.js が付けるクラス。配布物・PDF でも同じに見えるよう shell 側に置く。
+   色はテーマが --pp-ed-c1〜c6(と表示名 --pp-ed-cN-label)で提供する。無ければアクセント色 */
+.reveal .pp-c1 { color: var(--pp-ed-c1, var(--pp-accent)); }
+.reveal .pp-c2 { color: var(--pp-ed-c2, var(--pp-accent)); }
+.reveal .pp-c3 { color: var(--pp-ed-c3, var(--pp-accent)); }
+.reveal .pp-c4 { color: var(--pp-ed-c4, var(--pp-accent)); }
+.reveal .pp-c5 { color: var(--pp-ed-c5, var(--pp-accent)); }
+.reveal .pp-c6 { color: var(--pp-ed-c6, var(--pp-accent)); }
+.reveal .pp-hl { background: var(--pp-ed-hl, rgba(255, 214, 0, 0.35)); border-radius: 2px; padding: 0 0.1em; }
+.reveal ol.pp-olist { margin: 0; padding-left: 1.6em; }
+
+/* ------------------------------------- エディターで挿入した部品(.pp-obj)
+   図形・線・テキストボックス・画像・表・グループ。editor.js が書き出す HTML をそのまま描く
+   (図形の輪郭は editor.js が大きさに合わせて作った <svg class="pp-sh-g">。表示に JS は要らない)。
+   色は CSS 変数で持つ: --sh-fill(塗り)/ --sh-fo(塗りの不透明度)/ --sh-line(枠線・線)/ --sh-lw(太さ)/ --sh-tc(文字)。
+   既定はテーマの色(--pp-ed-c*・--pp-fg)。位置は section 基準の left / top(1280×720 の座標) */
+.reveal .slides section .pp-obj { position: absolute; margin: 0; box-sizing: border-box; }
+.reveal .slides section .pp-shape {
+  display: flex; flex-direction: column; justify-content: center; padding: 6px 12px;
+  color: var(--sh-tc, #fff); font-size: 22px; line-height: 1.35; text-align: center; overflow-wrap: anywhere;
+}
+.reveal .slides section .pp-shape[data-valign="top"] { justify-content: flex-start; }
+.reveal .slides section .pp-shape[data-valign="bottom"] { justify-content: flex-end; }
+.reveal .slides section .pp-shape.pp-tb {
+  --sh-fill: none; color: var(--sh-tc, var(--pp-fg, #1a1a1a)); text-align: left; justify-content: flex-start; padding: 4px 6px; font-size: 24px; line-height: 1.4;
+}
+.reveal .slides section .pp-shape > .pp-sh-t { position: relative; min-height: 1.35em; margin: 0; }
+.reveal .slides section .pp-obj > svg.pp-sh-g { position: absolute; left: 0; top: 0; overflow: visible; pointer-events: none; margin: 0; max-width: none; max-height: none; }
+.reveal .pp-sh-g .pp-sh-p {
+  fill: var(--sh-fill, var(--pp-ed-c2, var(--pp-ed-c1, var(--pp-accent, #2563eb)))); fill-opacity: var(--sh-fo, 1);
+  stroke: var(--sh-line, none); stroke-width: var(--sh-lw, 0); stroke-linejoin: round;
+}
+.reveal .pp-sh-g .pp-sh-x { fill: #fff; fill-opacity: .22; stroke: var(--sh-line, none); stroke-width: var(--sh-lw, 0); }
+.reveal .slides section .pp-line { pointer-events: none; }
+.reveal .pp-line .pp-sh-g .pp-sh-p { fill: none; fill-opacity: 1; stroke: var(--sh-line, var(--pp-fg, #1a1a1a)); stroke-width: var(--sh-lw, 2px); stroke-linecap: butt; }
+.reveal .pp-line .pp-sh-g .pp-sh-h { fill: var(--sh-line, var(--pp-fg, #1a1a1a)); stroke: none; }
+.reveal .pp-line .pp-sh-g .pp-sh-h.pp-open { fill: none; stroke: var(--sh-line, var(--pp-fg, #1a1a1a)); stroke-width: var(--sh-lw, 2px); stroke-linejoin: miter; stroke-linecap: butt; }
+.reveal .pp-line .pp-sh-g .pp-sh-hit { fill: none; stroke: transparent; stroke-width: 14px; pointer-events: stroke; }
+.reveal .pp-obj.pp-shadow > svg.pp-sh-g { filter: drop-shadow(0 3px 5px rgba(0, 0, 0, .28)); }
+.reveal .slides section img.pp-pic { max-width: none; max-height: none; object-fit: fill; }
+.reveal .slides section img.pp-pic.pp-shadow, .reveal .slides section .pp-tblw.pp-shadow { box-shadow: 0 3px 10px rgba(0, 0, 0, .28); }
+/* 最背面:テーマの部品(文字・カード)より後ろ。section の中だけで重ねる */
+.reveal .slides section:has(> .pp-obj.pp-back) { isolation: isolate; }
+.reveal .slides section > .pp-obj.pp-back { z-index: -1; }
+/* 表(挿入 › 表)。見出しの行はテーマの色、本文は文字色の薄い罫 */
+.reveal .slides section .pp-tbl { width: 100%; margin: 0; border-collapse: collapse; font-size: 18px; line-height: 1.4; color: var(--pp-fg, #1a1a1a); table-layout: fixed; }
+.reveal .slides section .pp-tbl th, .reveal .slides section .pp-tbl td {
+  height: 2.4em; padding: 6px 12px; text-align: left; vertical-align: middle; overflow-wrap: anywhere;
+  border: 1px solid color-mix(in srgb, var(--pp-fg, #1a1a1a) 22%, transparent); background: none;
+}
+.reveal .slides section .pp-tbl th { background: var(--sh-fill, var(--pp-ed-c2, var(--pp-ed-c1, var(--pp-accent, #2563eb)))); color: #fff; font-weight: 700; }
+.reveal .slides section .pp-tbl.pp-band tr:nth-child(even) td { background: color-mix(in srgb, var(--pp-fg, #1a1a1a) 6%, transparent); }

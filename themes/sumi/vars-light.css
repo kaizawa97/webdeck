@@ -1,0 +1,63 @@
+/* ============================================================
+   SUMI THEME — LIGHT tokens
+   出自: webpaper design-tokens.css。投影向け調整(補助グレーを
+   一段濃く等)は DESIGN.md §2 が正。値の変更はこのファイルだけで
+   行う(components/layouts にリテラル色を書かない)。
+   ============================================================ */
+:root {
+  /* ---- 紙とパネル ---- */
+  --bg-page: #faf8f4;        /* 生成りの紙(真っ白禁止) */
+  --bg-panel: #ffffff;       /* 図版・部品だけが白で一段浮く */
+  --bg-code: #ececec;
+  --bg-neutral: #f2f2f2;
+  --bg-terminal: #1a1a1a;
+
+  /* ---- インク(グレー階調で情報の格を作る) ---- */
+  --ink: #111111;
+  --ink-mid: #555555;
+  --gray-caption: #666666;   /* webpaper #808080 → 投影で飛ぶため一段濃く */
+  --gray-faint: #b0b0b0;
+
+  /* ---- 罫線の言語(太さ+濃さで格を語る) ---- */
+  --line-strong: #111111;    /* 格のある枠(2px で使う) */
+  --line: #c9c9c9;           /* 日常のカード(1px) */
+  --line-soft: #e5e2dc;      /* 背景に沈む極薄 */
+
+  /* ---- 意味のある色(これ以外の色は塗らない) ---- */
+  --accent: #2c4fae;         /* 群青 = 強調・現在地・リンク */
+  --accent-bright: #86b4e8;
+  --accent-rgb: 44, 79, 174;
+  --crimson: #d1495b;        /* 深紅 = 「ここを見ろ」1 面 1〜2 箇所 */
+
+  /* ---- チャート(主役=墨 / 比較=グレー) ---- */
+  --chart-main: #111111;
+  --chart-compare: #8e8e8e;
+  --chart-grid: #dddddd;
+
+  /* ---- パステル 3 色(分類の意味コーディング) ---- */
+  --pastel-lavender: #e9e6ff;
+  --pastel-blue: #e0f1ff;
+  --pastel-mint: #e2f0e8;
+
+  /* ---- ターミナル ---- */
+  --term-ink: #d8d8d8;
+  --term-label: #d06080;
+  --term-token: #7098b8;
+
+  /* ---- カバー(墨のマストヘッド帯。ダークでは白抜き反転) ---- */
+  --cover-bg: #1e1c19;               /* 暖色の墨(紙の家族に揃える) */
+  --cover-ink: #faf8f4;
+  --cover-muted: rgba(250, 248, 244, 0.62);
+  --cover-rule: rgba(250, 248, 244, 0.34);
+
+  /* ---- 家具・進捗 ---- */
+  --footer-ink: #666666;
+  --progress-fill: linear-gradient(90deg, #23408e 0%, #3b63c4 55%, #86b4e8 100%);
+                              /* 唯一のグラデ許可箇所(webpaper レール意匠の移植) */
+}
+
+/* エディター(runtime/editor.js)の文字色パレット */
+:root {
+  --pp-ed-c1: var(--accent); --pp-ed-c1-label: "群青（強調）";
+  --pp-ed-hl: rgba(var(--accent-rgb), 0.18);
+}

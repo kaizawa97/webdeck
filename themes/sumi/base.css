@@ -1,0 +1,178 @@
+/* ============================================================
+   SUMI THEME — base
+   Visual language: 生成りの紙 × 墨 × 群青(webpaper の 16:9 翻案。
+   設計仕様は DESIGN.md)。ページ番号は Reveal 組み込み .slide-number を
+   フッター帯仕様に再スタイルする(PDF 出力にもそのまま乗る)。
+   ============================================================ */
+
+html, body {
+  background: var(--bg-page);
+  margin: 0;
+  padding: 0;
+}
+
+/* ---------- reveal base ---------- */
+.reveal {
+  font-family: var(--f-body);
+  font-size: 26px;
+  font-weight: 400;
+  color: var(--ink);
+  letter-spacing: 0.01em;
+}
+.reveal .slides section {
+  text-align: left;
+  padding: 0 64px;
+  box-sizing: border-box;
+}
+/* print view では reveal.css が全 section に padding: 0 !important を強制する
+   ため、同一セレクタ+!important で標準余白を復元する(aws base.css と同じ規約)。 */
+html.reveal-print .reveal .slides section {
+  padding: 0 64px !important;
+}
+.reveal .slides { line-height: 1.55; }
+.reveal a { color: var(--accent); text-decoration: none; }
+.reveal strong { font-weight: 700; color: inherit; }
+.reveal em { font-style: normal; font-weight: 700; } /* 強調は太字だけ(イタリック禁止) */
+.reveal ::selection { background: rgba(var(--accent-rgb), 0.22); }
+.num, .tabular { font-variant-numeric: tabular-nums; }
+
+/* ---------- progress bar: 群青グラデの進捗レール(webpaper で唯一
+   グラデが許されたレール意匠の移植。「例外は 1 つ」の思想ごと保存) ---------- */
+.reveal .progress {
+  height: 3px;
+  background: var(--pp-progress-track);
+}
+.reveal .progress span { background: var(--progress-fill); }
+
+/* ---------- page number = フッター帯の右端(等幅・極小グレー)
+   Reveal 組み込み slide-number(shell 標準 config: slideNumber:'c')を再配置。
+   位置は shell が配布するキャンバス実寸(--pp-canvas-*)基準 —
+   非16:9ウィンドウでもレターボックスに置き去りにならずスライドに追従する。 ---------- */
+.reveal .slide-number {
+  background: none;
+  right: calc(var(--pp-canvas-r, 0px) + 0.05 * var(--pp-canvas-w, 100vw));
+  bottom: calc(var(--pp-canvas-b, 0px) + 0.018 * var(--pp-canvas-h, 100vh));
+  left: auto;
+  top: auto;
+  padding: 0;
+  font-family: var(--f-mono);
+  font-size: clamp(9px, calc(0.0141 * var(--pp-canvas-w, 100vw)), 18px);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.04em;
+  color: var(--footer-ink);
+}
+.reveal .slide-number a { color: inherit; text-decoration: none; }
+
+/* カバー(section.sumi-cover)は全面墨帯なのでページ番号・フッターを出さない。
+   reveal.js が inline style で切り替えるため !important。print はページ単位判定。 */
+html:not(.reveal-print) .reveal-viewport:has(section.present.sumi-cover) .slide-number { display: none !important; }
+html.reveal-print .pdf-page:has(section.sumi-cover) .slide-number { display: none !important; }
+
+/* ---------- フッター家具: デッキ題(左)— 意味のあるメタだけ。
+   デッキ側 HTML(body 直下):
+     <div class="sumi-footer"><div class="sf-title">デッキ題</div></div>
+   キャンバス全面のオーバーレイとして配置(aws-footer と同じ方式)。 ---------- */
+.sumi-footer {
+  position: fixed;
+  left: var(--pp-canvas-l, 0px);
+  top: var(--pp-canvas-t, 0px);
+  width: var(--pp-canvas-w, 100%);
+  height: var(--pp-canvas-h, 100%);
+  z-index: 30;
+  pointer-events: none;
+}
+.sumi-footer .sf-title {
+  position: absolute;
+  left: 5%;
+  bottom: 1.9%;
+  font-family: var(--f-body);
+  font-size: clamp(9px, calc(0.0141 * var(--pp-canvas-w, 100vw)), 18px);
+  letter-spacing: 0.02em;
+  color: var(--footer-ink);
+  line-height: 1.3;
+  max-width: 60%;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+/* カバーでは家具ごと非表示(墨帯の上にグレー文字は置かない) */
+html:not(.reveal-print) body:has(section.present.sumi-cover) .sumi-footer { display: none; }
+/* 俯瞰(O)とスクロール閲覧では等倍固定のフッターがサムネイルに重なるため隠す */
+body:has(.reveal.overview) .sumi-footer { display: none; }
+.reveal-scroll .sumi-footer { display: none; }
+
+/* ---------- typographic roles ---------- */
+h1, h2, h3 { margin: 0; }
+
+/* スライドタイトル: 黒太縦バー+太字(webpaper の h2 意匠 — この型が署名) */
+.reveal .slides section h2 {
+  font-family: var(--f-body);
+  font-weight: 700;
+  font-size: 40px;
+  line-height: 1.3;
+  color: var(--ink);
+  border-left: 12px solid var(--ink);
+  padding-left: 22px;
+  margin: 46px 0 22px;
+}
+
+/* キッカー: 欧文小ラベル(.3em 字間・群青)。フォント床除外(template.json) */
+.kicker {
+  font-family: var(--f-body);
+  font-size: 16px;
+  font-weight: 700;
+  letter-spacing: 0.3em;
+  color: var(--accent);
+  text-transform: uppercase;
+  margin: 0 0 14px;
+}
+
+/* リード: タイトル直下の結論先出し 1〜2 行 */
+.lead {
+  font-size: 30px;
+  font-weight: 400;
+  color: var(--ink-mid);
+  line-height: 1.6;
+  margin: 0 0 26px;
+}
+.small { font-size: 20px; color: var(--ink-mid); }
+.caption { font-size: 18px; color: var(--gray-caption); }
+.hang { text-indent: -0.5em; }
+
+/* キーナンバー・キークレーム(深紅は 1 面 1〜2 箇所まで) */
+.key-number, .key-claim { color: var(--crimson); font-weight: 700; }
+
+/* 出典行 — フッター帯(下端 44px)の直上に置く共通規約 */
+.src {
+  position: absolute;
+  bottom: 56px;
+  left: 64px;
+  right: 64px;
+  font-family: var(--f-body);
+  font-size: 18px;
+  letter-spacing: 0.02em;
+  color: var(--gray-caption);
+  border-top: 1px solid var(--line-soft);
+  padding-top: 8px;
+  line-height: 1.5;
+}
+
+/* 箇条書きの既定(詰めすぎない) */
+.reveal .slides section ul,
+.reveal .slides section ol { margin: 0 0 0 1.1em; padding: 0; }
+.reveal .slides section li { margin: 12px 0; }
+.reveal .slides section li::marker { color: var(--ink-mid); }
+
+/* fragments — 段階表示の現在強調は群青(深紅は「ここを見ろ」専用で使わない) */
+.reveal .fragment { transition: all 0.55s cubic-bezier(0.22, 1, 0.36, 1); }
+.reveal .fragment.fade-up { transform: translateY(22px); }
+.reveal .fragment.fade-up.visible { transform: translateY(0); }
+.reveal .fragment.highlight-current-blue.current-fragment { color: var(--accent); }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}

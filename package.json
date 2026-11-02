@@ -1,0 +1,20 @@
+{
+  "name": "webdeck",
+  "version": "0.1.0",
+  "private": true,
+  "description": "webdeck: LLM-native presentation skill — Reveal.js runtime + themes + verification/export pipeline",
+  "type": "module",
+  "scripts": {
+    "new-deck": "node tools/new-deck.mjs",
+    "verify": "node tools/verify.mjs",
+    "bundle": "node tools/bundle.mjs",
+    "export-pdf": "node tools/export-pdf.mjs",
+    "export-pptx": "node tools/export-pptx.mjs"
+  },
+  "dependencies": {
+    "jszip": "^3.10.1",
+    "pdf-lib": "^1.17.1",
+    "playwright": "^1.54.0",
+    "pptxgenjs": "^4.0.1"
+  }
+}

@@ -1,0 +1,12 @@
+/* ============================================================
+   SUMI THEME — fonts
+   BIZ UDPGothic のシステムフォントスタック(woff2 同梱なし)。
+   検証・出力ホストには BIZ UDPGothic と BIZ UDGothic(等幅)の両方
+   (Google Fonts OFL 版)をインストールすること(無ければ Noto /
+   DejaVu 系の代替面で実測される — DESIGN.md §6)。
+   ============================================================ */
+:root {
+  --f-body: "BIZ UDPGothic", "Noto Sans JP", "Hiragino Kaku Gothic ProN", Meiryo, sans-serif;
+  --f-mono: "BIZ UDGothic", Consolas, "SFMono-Regular", Menlo, "Courier New", monospace;
+  --f-serif: Georgia, "Times New Roman", "Hiragino Mincho ProN", serif; /* 引用原文専用 */
+}

@@ -1,0 +1,35 @@
+{
+  "skill_name": "webdeck",
+  "evals": [
+    {
+      "id": 0,
+      "eval_name": "eval-0-new-deck-pdf",
+      "prompt": "来週の社内勉強会用に「生成AIエージェント入門」というプレゼンを作ってください。5枚構成(表紙、アジェンダ、エージェントの仕組み、活用例、まとめ)でお願いします。ダークテーマでかっこよく。発表者名は「山田太郎 / DX推進部」。当日投影するほかに配布もしたいので PDF でも欲しいです。",
+      "expected_output": "presentations/ 配下にデッキ(index.html)が生成され、検証(verify)が指摘ゼロで通り、5ページのダークテーマ PDF が out/ に出力される",
+      "files": [],
+      "assertions": [
+        "deck-generated: project 内にデッキ(index.html を含むディレクトリ)が生成されている",
+        "five-slides: スライドがちょうど5枚ある(<section> 数)",
+        "verify-clean-pass: プラットフォームの検証ハーネス(tools/verify.mjs)が exit 0 かつ overflow/エラー指摘ゼロで通る",
+        "pdf-5-pages: PDF が存在し、ページ数が5である(pdfinfo)",
+        "dark-theme-consistent: ダークテーマ CSS と assets/dark/ の背景アートが対で使われている",
+        "offline-safe: index.html に外部 http(s) 参照がなく、<script type=module> も使っていない"
+      ]
+    },
+    {
+      "id": 1,
+      "eval_name": "eval-1-exec-pptx",
+      "prompt": "経営会議向けに「AI活用の現状と来期方針」という資料を3枚で作ってください。数字を大きく見せる感じで(現状の利用率62%、削減時間 月8,900時間、来期投資 1.2億円 を使ってください)。提出フォーマットが PowerPoint 指定なので pptx でお願いします。",
+      "expected_output": "3枚のデッキが生成・検証され、スピーカーノート込みの 3スライド PPTX が出力される",
+      "files": [],
+      "assertions": [
+        "deck-generated: project 内にデッキ(index.html)が生成されている",
+        "three-slides: スライドがちょうど3枚ある",
+        "verify-clean-pass: 検証ハーネスが exit 0・指摘ゼロで通る",
+        "pptx-3-slides: PPTX が存在し、スライド XML が3枚ある",
+        "required-numbers: 指定された3つの数字(62% / 8,900 / 1.2億)がすべてスライドに含まれる",
+        "offline-safe: 外部 http(s) 参照なし・classic script のみ"
+      ]
+    }
+  ]
+}

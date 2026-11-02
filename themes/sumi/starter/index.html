@@ -1,0 +1,154 @@
+<!doctype html>
+<html lang="ja" data-deck-theme="light">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Deck Starter — webdeck</title>
+
+<!-- ============================================================
+     webdeck deck starter(sumi テーマ。defaultMode = light で記述)
+     新しいデッキは tools/new-deck.mjs で呼び出し元プロジェクトに生成する
+     (この雛形を手でコピーしない。手順は SKILL.md):
+       1. node $PP/tools/new-deck.mjs <出力先> --template sumi --mode light|dark --title "..."
+       2. <section> を書く(技術規約は docs/AUTHORING.md、内容規範は docs/CONTENT.md)
+       3. tools/verify.mjs で検証 → 合格するまで直す
+     ============================================================ -->
+
+<!-- 読み込み順の規約: reset → reveal → shell(基盤の既定)→ テーマ(上書き)→ デッキ固有。
+     sumi はアセット PNG を持たない(CSS のみ)。dark へはエントリ CSS(light→dark)と
+     html の data-deck-theme 属性値の 2 点差し替えだけで切り替わる。 -->
+<link rel="stylesheet" href="../../../runtime/vendor/reveal/reset.css">
+<link rel="stylesheet" href="../../../runtime/vendor/reveal/reveal.css">
+<link rel="stylesheet" href="../../../runtime/shell.css">
+<link rel="stylesheet" href="../light.css">
+
+<style>
+/* ---- deck-local styles(このデッキ固有のスタイルはここに書く) ---- */
+</style>
+</head>
+<body>
+
+<!-- sumi フッター(デッキ題のみ。ページ番号はテーマが自動配置)— themes/sumi/README.md 参照 -->
+<div class="sumi-footer">
+  <div class="sf-title">Deck Starter — webdeck</div>
+</div>
+
+<div class="reveal">
+  <div class="slides">
+
+    <!-- ==== 1. カバー(墨のマストヘッド) ==== -->
+    <section class="sumi-cover">
+      <div class="cover-block">
+        <div class="kicker">Presentation</div>
+        <h1>プレゼンテーションのタイトル</h1>
+        <div class="cover-meta">
+          <span>YYYY-MM-DD</span><span>発表の場・文書種別</span>
+        </div>
+      </div>
+      <div class="speaker">発表者名</div>
+      <div class="speaker-role">所属・役職</div>
+      <aside class="notes">
+        スピーカーノートはこのように aside.notes に書く。
+        S キーでスピーカービューに表示され、PPTX 出力にもノートとして入る。
+      </aside>
+    </section>
+
+    <!-- ==== 2. アジェンダ(特大黒丸+two-tier。3〜5 項目・1 行ラベル) ==== -->
+    <section class="sumi-agenda">
+      <h2>本日の内容</h2>
+      <ul class="agenda">
+        <li class="is-current">
+          <span class="agenda-title">ひとつめの話題</span>
+          <span class="agenda-desc">li に is-current を付けると現在地が群青になる(この項目が実演)</span>
+        </li>
+        <li>
+          <span class="agenda-title">ふたつめの話題</span>
+          <span class="agenda-desc">この章で扱う内容の一言説明</span>
+        </li>
+        <li>
+          <span class="agenda-title">みっつめの話題</span>
+          <span class="agenda-desc">項目は 3〜5 つ・タイトルは 1 行に収める</span>
+        </li>
+        <li>
+          <span class="agenda-title">まとめと次の一歩</span>
+          <span class="agenda-desc">最後に要点と次のアクションで締める</span>
+        </li>
+      </ul>
+    </section>
+
+    <!-- ==== 3. 章扉(chapter-break 意匠+章番号) ==== -->
+    <section class="sumi-section">
+      <div class="chapter-no">01</div>
+      <div class="section-inner">
+        <div class="chapter-rule"></div>
+        <div class="kicker">Chapter</div>
+        <h2>ひとつめの話題</h2>
+      </div>
+    </section>
+
+    <!-- ==== 4. 標準コンテンツ(h2 黒縦バー+lead+部品の例) ==== -->
+    <section>
+      <h2>コンテンツスライドの例</h2>
+      <p class="lead">タイトル直下に結論を先に言い切るリード文を 1〜2 行。</p>
+      <div class="grid grid--3">
+        <div class="card">
+          <p class="card-title card-title--dot">1 面 = 1 メッセージ</p>
+          <p>詰め込まない。一文で言えない面は作らない。</p>
+        </div>
+        <div class="card fragment fade-up">
+          <p class="card-title card-title--dot">fragment で段階表示</p>
+          <p>段階の強調は群青。深紅は見せ場の 1 点専用。</p>
+        </div>
+        <div class="pastel-card pastel-card--blue fragment fade-up">
+          <p class="card-title">パステル=分類</p>
+          <p>色は意味の分だけ。図中の色と同色対応させると凡例になる。</p>
+        </div>
+      </div>
+      <div class="stat-row" style="margin-top: 26px;">
+        <div class="stat">
+          <span class="stat-value">95<span style="font-size: 32px;">%</span></span>
+          <span class="stat-label">画面はモノクロ基調</span>
+        </div>
+        <div class="stat">
+          <span class="stat-value stat-value--key">1</span>
+          <span class="stat-label">深紅は 1 面 1 箇所まで</span>
+        </div>
+        <div class="stat">
+          <span class="stat-value">2</span>
+          <span class="stat-label">ウェイトは 400 / 700 の 2 段だけ</span>
+        </div>
+      </div>
+      <div class="src">出典: 部品カタログと規約は themes/sumi/README.md(テーマ正典)</div>
+      <aside class="notes">コンテンツはキャンバス 1280×720 の絶対座標で自由に配置してよい。</aside>
+    </section>
+
+    <!-- ==== 5. 引用(原文セリフ+和訳+出典) ==== -->
+    <section class="sumi-quote">
+      <div class="quote-frame">
+        <div class="quote-mark">&ldquo;</div>
+        <blockquote>Quotations are verified against the primary source, verbatim.</blockquote>
+        <div class="quote-translation">引用は一次ソースに対して逐語で検証する。</div>
+        <div class="quote-source">— 出典(著者・文書名・年)</div>
+      </div>
+    </section>
+
+    <!-- ==== 6. クロージング ==== -->
+    <section class="sumi-closing">
+      <div class="closing-statement">締めの一文をここに。</div>
+      <div class="closing-sub">Q&amp;A・連絡先など</div>
+    </section>
+
+  </div>
+</div>
+
+<script src="../../../runtime/vendor/reveal/reveal.js"></script>
+<script src="../../../runtime/vendor/reveal/plugin/notes.js"></script>
+<script src="../../../runtime/shell.js"></script>
+<script>
+  PPShell.init({
+    title: 'Deck Starter — webdeck'
+    // config: { ... }   // Reveal 設定を上書きしたい場合(通常は不要)
+  });
+</script>
+</body>
+</html>

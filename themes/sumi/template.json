@@ -1,0 +1,17 @@
+{
+  "name": "sumi",
+  "displayName": "sumi — 生成りの紙×墨×群青(webpaper 翻案)",
+  "contract": 1,
+  "modes": ["light", "dark"],
+  "defaultMode": "light",
+  "entry": {
+    "light": "light.css",
+    "dark": "dark.css"
+  },
+  "themeAttr": "data-deck-theme",
+  "starter": "starter/index.html",
+  "verify": {
+    "footerZonePx": 44,
+    "fontFloorExclude": [".kicker"]
+  }
+}

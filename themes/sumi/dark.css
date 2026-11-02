@@ -1,0 +1,11 @@
+/* ============================================================
+   SUMI THEME — DARK entry
+   デッキからはこのファイル1枚を <link> する。
+   (バンドラは @import を再帰的にインライン化する)
+   ============================================================ */
+@import url("fonts.css");
+@import url("vars-dark.css");
+@import url("shell-hooks-dark.css");
+@import url("base.css");
+@import url("components.css");
+@import url("layouts.css");
