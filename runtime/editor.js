@@ -380,6 +380,10 @@
     }).catch(function () { toast('クリップボードを読めませんでした。⌘V / Ctrl+V で貼り付けてください', 'err'); });
   }
   function onPaste(e) {
+    var cdt = (e.clipboardData || global.clipboardData);
+    if (active && objClip && objClip.mark && cdt && cdt.getData('text/plain') === objClip.mark) {   // 部品のコピー:文字の中で貼っても部品として
+      e.preventDefault(); blurText(); pasteParts(); return;
+    }
     if (!hostOf(e.target) && !(notesBody && notesBody.contains(e.target))) {
       if (active && !typingNow() && !(e.target.closest && e.target.closest(CHROME))) pasteOutside(e);
       return;
@@ -485,6 +489,7 @@
     var cur = current();
     if (isAuto(cur)) { toast('自動で作るページ（目次）は複製できません'); return; }
     var c = el(unsubst(serialize(cur).html));
+    c.querySelectorAll('.pp-obj[data-grad]').forEach(renderShape);   // グラデーションの id を新しく
     var base = cur.getAttribute('data-page');
     addSlide(c, model ? newKey((base || 'x.page').replace(/-\d{8}-\d+$/, '') + '-copy') : null);
     toast('複製しました');
@@ -1239,7 +1244,7 @@
           if (!m.shiftKey || dy === 0) dx += snap1([B0.left + dx, B0.left + B0.width / 2 + dx, B0.right + dx], T.xs);
           if (!m.shiftKey || dx === 0) dy += snap1([B0.top + dy, B0.top + B0.height / 2 + dy, B0.bottom + dy], T.ys);
         }
-        st.forEach(function (x) { setTr(x.t, x.tr[0] + dx / k, x.tr[1] + dy / k); });
+        st.forEach(function (x) { var d = unrot(x.t, dx / k, dy / k); setTr(x.t, x.tr[0] + d[0], x.tr[1] + d[1]); });
         drawGuides(free ? null : { left: B0.left + dx, top: B0.top + dy, right: B0.right + dx, bottom: B0.bottom + dy, width: B0.width, height: B0.height }, T);
       } else {
         var x = st[0], r = x.r, t0 = x.t, deg = totalRot(t0), ra = deg * Math.PI / 180, ca = Math.cos(ra), sa = Math.sin(ra);
@@ -1263,7 +1268,7 @@
         // 反対側の辺(角)が動かないように位置を直す。回転していても同じ
         var sx = mode.indexOf('w') >= 0 ? x.w - w : 0, sy = mode.indexOf('n') >= 0 ? x.h - h : 0;
         var cx = sx + (w - x.w) / 2, cy = sy + (h - x.h) / 2;
-        var gx = cx * ca - cy * sa, gy = cx * sa + cy * ca;
+        var oa = getRot(t0) * Math.PI / 180, gx = cx * Math.cos(oa) - cy * Math.sin(oa), gy = cx * Math.sin(oa) + cy * Math.cos(oa);   // 親の向きへは自分の回転だけ
         setSize(t0, hasW ? w : null, hasH ? h : null);
         setTr(t0, x.tr[0] + gx + (x.w - w) / 2, x.tr[1] + gy + (x.h - h) / 2);
         if (kids) scaleKids(kids, w / x.w, hasH ? h / x.h : 1);
@@ -1327,7 +1332,12 @@
     if (chain.length && !add && !(sels.length > 1 && sels.some(function (x) { return x.contains(e.target); }))) {
       var at = sel ? chain.indexOf(sel) : -1, th = hostOf(e.target);
       if (at === 0) {   // いちばん内側の部品がもう選ばれている：文字の上なら文字の編集、ほかはドラッグで移動
-        if (th && sel.contains(th)) return;
+        if (th && sel.contains(th)) {
+          if (/\S/.test(th.textContent)) return;   // 文字の上:そのまま文字の編集
+          var o0 = sel, cx0 = e.clientX, cy0 = e.clientY;   // 文字が空:ドラッグなら移動、クリックなら文字の編集
+          e.preventDefault(); startDrag(e, 'move', function () { editText(o0, false, cx0, cy0); });
+          return;
+        }
         e.preventDefault(); blurText(); startDrag(e, 'move'); return;
       }
       var nx = at > 0 ? chain[at - 1] : chain[chain.length - 1];   // グループの中をもう一度押した：1 段内側
@@ -1343,6 +1353,7 @@
     if (add) {   // Shift / ⌘ / Ctrl + クリック：選択に足す・外す
       e.preventDefault();
       var hitSel = sels.filter(function (x) { return x.contains(e.target); })[0];
+      if (!hitSel && chain.length) first = chain[chain.length - 1];   // 挿入した部品はいちばん外側(グループ)ごと
       select(hitSel || first, true);
       return;
     }
@@ -1390,7 +1401,7 @@
     });
   });
   var deletePart = selOp(function (list) { list.forEach(function (e) { e.remove(); }); sels = []; });
-  function nudge(dx, dy) { return selOp(function (list) { list.forEach(function (e) { var t = getTr(e); setTr(e, t[0] + dx, t[1] + dy); }); })(); }
+  function nudge(dx, dy) { return selOp(function (list) { list.forEach(function (e) { var t = getTr(e), d = unrot(e, dx, dy); setTr(e, t[0] + d[0], t[1] + d[1]); }); })(); }
   /* 揃える：2 つ以上なら選んだ範囲に、1 つならスライドに合わせる */
   function alignCmd(kind) {
     return selOp(function (list) {
@@ -1404,7 +1415,7 @@
         if (kind === 't') dy = ref.top - r.top;
         if (kind === 'm') dy = (ref.top + ref.height / 2) - (r.top + r.height / 2);
         if (kind === 'b') dy = ref.bottom - r.bottom;
-        var t = getTr(e); setTr(e, t[0] + dx / k, t[1] + dy / k);
+        var t = getTr(e), d = unrot(e, dx / k, dy / k); setTr(e, t[0] + d[0], t[1] + d[1]);
       });
     });
   }
@@ -1420,8 +1431,8 @@
       var sum = it.reduce(function (a, x) { return a + (horiz ? x.r.width : x.r.height); }, 0);
       var gap = (span - sum) / (it.length - 1), pos = horiz ? first.left : first.top;
       it.forEach(function (x) {
-        var d = pos - (horiz ? x.r.left : x.r.top), t = getTr(x.e);
-        setTr(x.e, t[0] + (horiz ? d / k : 0), t[1] + (horiz ? 0 : d / k));
+        var d = pos - (horiz ? x.r.left : x.r.top), t = getTr(x.e), u = unrot(x.e, horiz ? d / k : 0, horiz ? 0 : d / k);
+        setTr(x.e, t[0] + u[0], t[1] + u[1]);
         pos += (horiz ? x.r.width : x.r.height) + gap;
       });
     });
@@ -1642,9 +1653,20 @@
     var r = e.getBoundingClientRect(), f = e.getAttribute('data-flip') || '', fh = /h/.test(f), fv = /v/.test(f);
     return [[r.left + (fh ? r.width : 0), r.top + (fv ? r.height : 0)], [r.left + (fh ? 0 : r.width), r.top + (fv ? 0 : r.height)]];
   }
-  function toLocal(parent, cx, cy) {   // 画面の座標 → parent の中の座標(スライドの px)
-    var r = parent.getBoundingClientRect(), k = scaleK();
+  function toLocal(parent, cx, cy) {   // 画面の座標 → parent の中の座標(スライドの px。回転したグループの中でも)
+    var r = parent.getBoundingClientRect(), k = scaleK(), rot = parent.tagName === 'SECTION' ? 0 : totalRot(parent);
+    if (rot) {
+      var a = -rot * Math.PI / 180, mx = r.left + r.width / 2, my = r.top + r.height / 2, x = cx - mx, y = cy - my;
+      return [(x * Math.cos(a) - y * Math.sin(a)) / k + parent.offsetWidth / 2, (x * Math.sin(a) + y * Math.cos(a)) / k + parent.offsetHeight / 2];
+    }
     return [(cx - r.left) / k - parent.clientLeft, (cy - r.top) / k - parent.clientTop];
+  }
+  function parentRot(e) { return e.parentElement && e.parentElement.tagName !== 'SECTION' ? totalRot(e.parentElement) : 0; }
+  function unrot(e, dx, dy) {   // 画面の向きの移動 → 親(回転したグループ)の向き
+    var pr = parentRot(e);
+    if (!pr) return [dx, dy];
+    var a = -pr * Math.PI / 180;
+    return [dx * Math.cos(a) - dy * Math.sin(a), dx * Math.sin(a) + dy * Math.cos(a)];
   }
   function makeShape(t, x, y, w, h) {
     var lk = LINE_KINDS[t], e = document.createElement('div');
@@ -1923,6 +1945,13 @@
       Array.from(g.children).forEach(function (c) {
         if (!isObj(c)) return;
         var l = parseFloat(c.style.left) || 0, t = parseFloat(c.style.top) || 0;
+        if (rot && isLine(c)) {   // 線は回転を持たない:両端をグループの中心のまわりに回す
+          var ends = lineEnds(c).map(function (q) { var x = q[0] - gcx, y = q[1] - gcy; return [x * Math.cos(a) - y * Math.sin(a) + gcx + gx, x * Math.sin(a) + y * Math.cos(a) + gcy + gy]; });
+          setLine(c, ends[0], ends[1]); renderShape(c);
+          if (back && par.tagName === 'SECTION') c.classList.add('pp-back');
+          par.insertBefore(c, g); out.push(c);
+          return;
+        }
         if (rot) {   // グループの回転を、中の部品の位置と向きに移す
           var w = c.offsetWidth, h = c.offsetHeight, x = l + w / 2 - gcx, y = t + h / 2 - gcy;
           l = x * Math.cos(a) - y * Math.sin(a) + gcx - w / 2; t = x * Math.sin(a) + y * Math.cos(a) + gcy - h / 2;
@@ -2122,7 +2151,16 @@
 
   /* ---- 部品の複製・コピー・貼り付け ---- */
   var objClip = null, CLIP_MARK = 'pp-editor-parts';
-  function cloneHtml(e) { var c = e.cloneNode(true); unmark(c); return c.outerHTML; }
+  function cloneHtml(e, toSlide) {
+    var c = e.cloneNode(true); unmark(c);
+    if (toSlide && isObj(e) && e.parentElement && e.parentElement.tagName !== 'SECTION') {   // グループの中の部品はスライドの座標に直す
+      var s = sectionOf(e), r = e.getBoundingClientRect(), m = toLocal(s, r.left + r.width / 2, r.top + r.height / 2);
+      c.classList.remove('pp-back');
+      if (isLine(e)) { var ce = lineEndsClient(e).map(function (q) { return toLocal(s, q[0], q[1]); }); setLine(c, ce[0], ce[1]); }
+      else { c.style.left = Math.round(m[0] - e.offsetWidth / 2) + 'px'; c.style.top = Math.round(m[1] - e.offsetHeight / 2) + 'px'; setRot(c, totalRot(e)); }
+    }
+    return c.outerHTML;
+  }
   function shift(e, d) { if (isObj(e)) { e.style.left = ((parseFloat(e.style.left) || 0) + d) + 'px'; e.style.top = ((parseFloat(e.style.top) || 0) + d) + 'px'; } }
   function duplicateParts() {
     if (!sels.length) { toast('先に、複製したい部品を選んでください'); return; }
@@ -2131,7 +2169,7 @@
   }
   function copyParts(cut) {
     if (!sels.length) return false;
-    objClip = { items: sels.map(function (e) { return { html: cloneHtml(e), obj: isObj(e), src: e }; }), from: current(), n: cut ? -1 : 0 };
+    objClip = { items: sels.map(function (e) { return { html: cloneHtml(e, true), obj: isObj(e), src: e }; }), from: current(), n: cut ? -1 : 0 };
     if (cut) deletePart();
     return true;
   }
@@ -2151,8 +2189,10 @@
   function onCopyCut(e) {
     if (!active || typingNow() || !sels.length) return;
     e.preventDefault();
+    var txt = sels.map(function (x) { return (x.textContent || '').replace(/\s+/g, ' ').trim(); }).filter(Boolean).join('\n');
     copyParts(e.type === 'cut');
-    if (e.clipboardData) e.clipboardData.setData('text/plain', CLIP_MARK);
+    objClip.mark = txt || CLIP_MARK;   // ほかのアプリには部品の文字を渡す。この文字のまま貼られたら部品として貼る
+    if (e.clipboardData) e.clipboardData.setData('text/plain', objClip.mark);
   }
   function pasteOutside(e) {   // 文字を打っていないときの貼り付け：画像 → 画像、部品 → 部品、文字 → テキストボックス
     var cd = e.clipboardData;
@@ -2160,7 +2200,7 @@
     var file = Array.from(cd.files || []).filter(function (f) { return /^image\//.test(f.type); })[0];
     var text = cd.getData('text/plain');
     if (file) { e.preventDefault(); insertImageFile(file); return; }
-    if (objClip && (text === CLIP_MARK || !text)) { e.preventDefault(); pasteParts(); return; }
+    if (objClip && (text === objClip.mark || !text)) { e.preventDefault(); pasteParts(); return; }
     if (text && /\S/.test(text)) {
       var s = editSection();
       if (!s) return;
@@ -2796,6 +2836,11 @@
       REVEAL_ATTRS.forEach(function (a) { e.removeAttribute(a); });
     });
     c.removeAttribute('style'); c.removeAttribute('data-page'); c.removeAttribute('id');
+    c.querySelectorAll('linearGradient[id]').forEach(function (g) {   // 縮小表示の中の id は別名に(元のスライドは隠れていて参照できない)
+      var id = g.id, nid = id + '-th';
+      g.id = nid;
+      c.querySelectorAll('[style*="url(#' + id + ')"]').forEach(function (x) { x.setAttribute('style', x.getAttribute('style').split('url(#' + id + ')').join('url(#' + nid + ')')); });
+    });
     var th = r.row.querySelector('.pp-th');
     th.querySelector('.slides').replaceChildren(c);
     var bg = th.querySelector('.pp-th-bg');
@@ -2999,7 +3044,7 @@
     if (mod && (k === 'b' || k === 'i' || k === 'u') && hostOf(e.target)) {
       e.preventDefault(); exec({ b: 'bold', i: 'italic', u: 'underline' }[k])(); return;
     }
-    var typing = hostOf(document.activeElement) || document.activeElement === notesBody;
+    var typing = typingNow() || !!(e.target && e.target.closest && e.target.closest('.pp-ed-dlg, .pp-ed-pop'));
     if (drawKind && k === 'escape') { e.preventDefault(); endDraw(); toast('挿入をやめました'); return; }
     if (!typing && mod && k === 'd' && sels.length) { e.preventDefault(); e.stopPropagation(); duplicateParts(); return; }
     if (!typing && mod && k === 'g') { e.preventDefault(); e.stopPropagation(); if (e.shiftKey) ungroupSel(); else groupSel(); return; }

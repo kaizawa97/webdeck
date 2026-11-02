@@ -45,6 +45,12 @@ async function extractSlide(FONT_MAP_) {
 
   const col = (c) => {
     if (!c) return null;
+    const cm = c.match(/color\(srgb ([^)]+)\)/);   // color-mix() の計算結果は color(srgb r g b / a)(0〜1)
+    if (cm) {
+      const q = cm[1].split(/[\s\/]+/).filter(Boolean).map(Number), a = q.length > 3 ? q[3] : 1;
+      if (!(a > 0.01)) return null;
+      return { hex: q.slice(0, 3).map((v) => Math.max(0, Math.min(255, Math.round(v * 255))).toString(16).padStart(2, '0')).join('').toUpperCase(), a };
+    }
     const m = c.match(/rgba?\(([^)]+)\)/);
     if (!m) return null;
     const p = m[1].split(/[\s,\/]+/).filter(Boolean).map(Number);
@@ -210,7 +216,12 @@ async function extractSlide(FONT_MAP_) {
   };
 
   // エディターで挿入した部品(.pp-obj)。回転していても、回す前の位置と大きさ(中心は同じ)
-  const rotOf = (cs) => { const m = /(-?[\d.]+)deg/.exec(cs.rotate || ''); return m ? parseFloat(m[1]) : 0; };
+  const rot1 = (cs) => { const m = /(-?[\d.]+)deg/.exec(cs.rotate || ''); return m ? parseFloat(m[1]) : 0; };
+  const rotOf = (cs, e) => {   // 自分と、外側のグループの回転を足す
+    let d = rot1(cs);
+    for (let x = e && e.parentElement; x && x.classList && x.classList.contains('pp-obj'); x = x.parentElement) d += rot1(getComputedStyle(x));
+    return d;
+  };
   const objBox = (e, r) => {
     const w = e.offsetWidth, h = e.offsetHeight, cx = (r.left + r.width / 2 - sl.left) / k, cy = (r.top + r.height / 2 - sl.top) / k;
     return { x: cx - w / 2, y: cy - h / 2, w, h };
@@ -219,7 +230,7 @@ async function extractSlide(FONT_MAP_) {
     const g = e.querySelector(':scope > svg.pp-sh-g'), sp = g && g.querySelector('.pp-sh-p');
     if (!sp) return null;
     const ps = getComputedStyle(sp), flip = e.getAttribute('data-flip') || '';
-    const base = { ...objBox(e, r), rot: rotOf(cs), flipH: /h/.test(flip), flipV: /v/.test(flip), op, shadow: e.classList.contains('pp-shadow'), dash: e.getAttribute('data-dash') || '' };
+    const base = { ...objBox(e, r), rot: rotOf(cs, e), flipH: /h/.test(flip), flipV: /v/.test(flip), op, shadow: e.classList.contains('pp-shadow'), dash: e.getAttribute('data-dash') || '' };
     const stroke = col(ps.stroke), sw = parseFloat(ps.strokeWidth) || 0;
     if (e.classList.contains('pp-line')) {
       return { t: 'line', ...base, kind: e.getAttribute('data-shape'), c: stroke || { hex: '000000', a: 1 }, lw: sw / k || 2, hs: e.getAttribute('data-hs') || '', he: e.getAttribute('data-he') || '' };
@@ -271,7 +282,7 @@ async function extractSlide(FONT_MAP_) {
       if (tag === 'img') {
         const data = await toData(e.currentSrc || e.src, e.offsetWidth, e.offsetHeight);
         const sc = (cs.scale || '1').split(/\s+/).map(parseFloat);
-        if (data) items.push({ t: 'img', ...objBox(e, r), data, op, rot: rotOf(cs), flipH: sc[0] < 0, flipV: (sc.length > 1 ? sc[1] : sc[0]) < 0, shadow: e.classList.contains('pp-shadow') });
+        if (data) items.push({ t: 'img', ...objBox(e, r), data, op, rot: rotOf(cs, e), flipH: sc[0] < 0, flipV: (sc.length > 1 ? sc[1] : sc[0]) < 0, shadow: e.classList.contains('pp-shadow') });
         return;
       }
       // グループ:中の部品をそれぞれ描く(グループの回転は PowerPoint では外れる)
